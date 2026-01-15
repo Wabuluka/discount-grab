@@ -1,0 +1,900 @@
+{
+	"info": {
+		"_postman_id": "dg-shoppingcart-api",
+		"name": "DG Shopping Cart API",
+		"description": "Complete API collection for the DG Shopping Cart e-commerce application.\n\n## Authentication\nThis API uses JWT Bearer tokens for authentication. After logging in or registering, the `accessToken` is automatically saved to the collection variables.\n\n## Getting Started\n1. Set the `baseUrl` variable to your API server (default: http://localhost:4000/api)\n2. Register a new user or login with existing credentials\n3. The access token will be automatically set for subsequent requests\n\n## Admin Routes\nAdmin routes require a user with `role: \"admin\"`. Create an admin user or update an existing user's role in the database.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:4000/api",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "productId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "orderId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "orderNumber",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{accessToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"description": "User authentication endpoints including registration, login, logout, and token refresh.",
+			"item": [
+				{
+					"name": "Register",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"accessToken\", jsonData.accessToken);",
+									"    console.log(\"Access token saved to collection variables\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "register"]
+						},
+						"description": "Register a new user account.\n\n**Request Body:**\n- `name` (string, required): User's full name (min 2 characters)\n- `email` (string, required): Valid email address\n- `password` (string, required): Password (min 8 characters)\n\n**Response:**\n- `accessToken`: JWT access token\n- `user`: User object with id, email, name, role"
+					},
+					"response": [
+						{
+							"name": "Successful Registration",
+							"originalRequest": {
+								"method": "POST",
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}"
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"user\": {\n        \"id\": \"507f1f77bcf86cd799439011\",\n        \"email\": \"john@example.com\",\n        \"name\": \"John Doe\",\n        \"role\": \"user\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"accessToken\", jsonData.accessToken);",
+									"    console.log(\"Access token saved to collection variables\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Login with existing credentials.\n\n**Request Body:**\n- `email` (string, required): User's email address\n- `password` (string, required): User's password\n\n**Response:**\n- `accessToken`: JWT access token\n- `user`: User object\n\n**Note:** A refresh token is also set as an HTTP-only cookie."
+					},
+					"response": [
+						{
+							"name": "Successful Login",
+							"originalRequest": {
+								"method": "POST",
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"user\": {\n        \"id\": \"507f1f77bcf86cd799439011\",\n        \"email\": \"john@example.com\",\n        \"name\": \"John Doe\",\n        \"role\": \"user\"\n    }\n}"
+						},
+						{
+							"name": "Invalid Credentials",
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"message\": \"Invalid credentials\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Current User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "me"]
+						},
+						"description": "Get the currently authenticated user's information.\n\n**Authentication:** Required\n\n**Response:**\n- `user`: User object with id, email, name, role"
+					},
+					"response": [
+						{
+							"name": "Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"user\": {\n        \"id\": \"507f1f77bcf86cd799439011\",\n        \"email\": \"john@example.com\",\n        \"name\": \"John Doe\",\n        \"role\": \"user\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"accessToken\", jsonData.accessToken);",
+									"    console.log(\"Access token refreshed\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/refresh",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "refresh"]
+						},
+						"description": "Refresh the access token using the refresh token cookie.\n\n**Authentication:** Required (via refresh token cookie)\n\n**Response:**\n- `accessToken`: New JWT access token\n\n**Note:** This endpoint requires the `rt` cookie to be present (set during login/register)."
+					},
+					"response": [
+						{
+							"name": "Token Refreshed",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 204) {",
+									"    pm.collectionVariables.set(\"accessToken\", \"\");",
+									"    console.log(\"Logged out, token cleared\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/logout",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "logout"]
+						},
+						"description": "Logout the current user and clear the refresh token cookie.\n\n**Response:** 204 No Content"
+					},
+					"response": [
+						{
+							"name": "Logged Out",
+							"status": "No Content",
+							"code": 204,
+							"body": ""
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Products",
+			"description": "Product management endpoints. Public routes for viewing, admin routes for CRUD operations.",
+			"item": [
+				{
+					"name": "List Products",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.docs && jsonData.docs.length > 0) {",
+									"        pm.collectionVariables.set(\"productId\", jsonData.docs[0]._id);",
+									"        console.log(\"First product ID saved: \" + jsonData.docs[0]._id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products?page=1&limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["products"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number (default: 1)"
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Items per page (default: 20)"
+								},
+								{
+									"key": "q",
+									"value": "laptop",
+									"description": "Search query (searches title and description)",
+									"disabled": true
+								},
+								{
+									"key": "category",
+									"value": "electronics",
+									"description": "Filter by category",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get a paginated list of all products.\n\n**Authentication:** Not required\n\n**Query Parameters:**\n- `page` (number): Page number (default: 1)\n- `limit` (number): Items per page (default: 20)\n- `q` (string): Search query (searches title and description)\n- `category` (string): Filter by category\n\n**Response:**\n- `docs`: Array of products\n- `total`: Total number of products\n- `page`: Current page\n- `pages`: Total number of pages"
+					},
+					"response": [
+						{
+							"name": "Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"docs\": [\n        {\n            \"_id\": \"507f1f77bcf86cd799439011\",\n            \"title\": \"Gaming Laptop\",\n            \"description\": \"High-performance gaming laptop\",\n            \"price\": 1299.99,\n            \"images\": [\"https://example.com/image.jpg\"],\n            \"stock\": 50,\n            \"category\": \"laptops\",\n            \"createdAt\": \"2024-01-01T00:00:00.000Z\",\n            \"updatedAt\": \"2024-01-01T00:00:00.000Z\"\n        }\n    ],\n    \"total\": 1,\n    \"page\": 1,\n    \"pages\": 1\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Product by ID",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products/{{productId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["products", "{{productId}}"]
+						},
+						"description": "Get a single product by its ID.\n\n**Authentication:** Not required\n\n**URL Parameters:**\n- `id` (string): Product ID\n\n**Response:**\n- `data`: Product object"
+					},
+					"response": [
+						{
+							"name": "Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"data\": {\n        \"_id\": \"507f1f77bcf86cd799439011\",\n        \"title\": \"Gaming Laptop\",\n        \"description\": \"High-performance gaming laptop with RTX 4080\",\n        \"price\": 1299.99,\n        \"images\": [\"https://example.com/image.jpg\"],\n        \"stock\": 50,\n        \"category\": \"laptops\",\n        \"specs\": {\n            \"processor\": \"Intel i9\",\n            \"ram\": \"32GB\",\n            \"storage\": \"1TB SSD\"\n        },\n        \"createdAt\": \"2024-01-01T00:00:00.000Z\",\n        \"updatedAt\": \"2024-01-01T00:00:00.000Z\"\n    }\n}"
+						},
+						{
+							"name": "Not Found",
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"message\": \"Product not found\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Create Product (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"productId\", jsonData.data._id);",
+									"    console.log(\"Created product ID: \" + jsonData.data._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Gaming Laptop Pro\",\n    \"description\": \"High-performance gaming laptop with RTX 4080 graphics card, perfect for gaming and content creation.\",\n    \"price\": 1599.99,\n    \"images\": [\n        \"https://example.com/laptop1.jpg\",\n        \"https://example.com/laptop2.jpg\"\n    ],\n    \"stock\": 25,\n    \"category\": \"laptops\",\n    \"specs\": {\n        \"processor\": \"Intel Core i9-13900H\",\n        \"ram\": \"32GB DDR5\",\n        \"storage\": \"1TB NVMe SSD\",\n        \"graphics\": \"NVIDIA RTX 4080\",\n        \"display\": \"17.3\\\" 240Hz QHD\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/products",
+							"host": ["{{baseUrl}}"],
+							"path": ["products"]
+						},
+						"description": "Create a new product. Requires admin authentication.\n\n**Authentication:** Required (Admin only)\n\n**Request Body:**\n- `title` (string, required): Product title\n- `description` (string, required): Product description\n- `price` (number, required): Product price\n- `images` (array): Array of image URLs\n- `stock` (number): Available stock (default: 0)\n- `category` (string): Product category\n- `specs` (object): Product specifications\n\n**Response:**\n- `data`: Created product object"
+					},
+					"response": [
+						{
+							"name": "Created",
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"data\": {\n        \"_id\": \"507f1f77bcf86cd799439011\",\n        \"title\": \"Gaming Laptop Pro\",\n        \"description\": \"High-performance gaming laptop...\",\n        \"price\": 1599.99,\n        \"images\": [\"https://example.com/laptop1.jpg\"],\n        \"stock\": 25,\n        \"category\": \"laptops\",\n        \"specs\": {...},\n        \"createdAt\": \"2024-01-01T00:00:00.000Z\",\n        \"updatedAt\": \"2024-01-01T00:00:00.000Z\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Update Product (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Gaming Laptop Pro - Updated\",\n    \"price\": 1499.99,\n    \"stock\": 30\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/products/{{productId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["products", "{{productId}}"]
+						},
+						"description": "Update an existing product. Requires admin authentication.\n\n**Authentication:** Required (Admin only)\n\n**URL Parameters:**\n- `id` (string): Product ID\n\n**Request Body:** Any product fields to update\n\n**Response:**\n- `data`: Updated product object"
+					},
+					"response": [
+						{
+							"name": "Updated",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"data\": {\n        \"_id\": \"507f1f77bcf86cd799439011\",\n        \"title\": \"Gaming Laptop Pro - Updated\",\n        \"price\": 1499.99,\n        \"stock\": 30,\n        \"...\": \"...\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete Product (Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products/{{productId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["products", "{{productId}}"]
+						},
+						"description": "Delete a product. Requires admin authentication.\n\n**Authentication:** Required (Admin only)\n\n**URL Parameters:**\n- `id` (string): Product ID\n\n**Response:** 204 No Content"
+					},
+					"response": [
+						{
+							"name": "Deleted",
+							"status": "No Content",
+							"code": 204,
+							"body": ""
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Cart",
+			"description": "Shopping cart management endpoints. All routes require authentication.",
+			"item": [
+				{
+					"name": "Get Cart",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/cart",
+							"host": ["{{baseUrl}}"],
+							"path": ["cart"]
+						},
+						"description": "Get the current user's shopping cart.\n\n**Authentication:** Required\n\n**Response:**\n- `cart`: Cart object with items and total"
+					},
+					"response": [
+						{
+							"name": "Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"cart\": {\n        \"_id\": \"507f1f77bcf86cd799439011\",\n        \"user\": \"507f1f77bcf86cd799439012\",\n        \"items\": [\n            {\n                \"product\": {\n                    \"_id\": \"507f1f77bcf86cd799439013\",\n                    \"title\": \"Gaming Laptop\",\n                    \"images\": [\"https://example.com/image.jpg\"],\n                    \"stock\": 50\n                },\n                \"quantity\": 2,\n                \"price\": 1299.99\n            }\n        ],\n        \"totalAmount\": 2599.98\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Add to Cart",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"productId\": \"{{productId}}\",\n    \"quantity\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/cart/add",
+							"host": ["{{baseUrl}}"],
+							"path": ["cart", "add"]
+						},
+						"description": "Add a product to the cart.\n\n**Authentication:** Required\n\n**Request Body:**\n- `productId` (string, required): Product ID to add\n- `quantity` (number): Quantity to add (default: 1)\n\n**Response:**\n- `cart`: Updated cart object\n\n**Note:** If the product is already in the cart, the quantity is incremented."
+					},
+					"response": [
+						{
+							"name": "Added to Cart",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"cart\": {\n        \"_id\": \"...\",\n        \"items\": [...],\n        \"totalAmount\": 1299.99\n    }\n}"
+						},
+						{
+							"name": "Product Not Found",
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"message\": \"Product not found\"\n}"
+						},
+						{
+							"name": "Insufficient Stock",
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"message\": \"Insufficient stock\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Update Cart Item",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"quantity\": 3\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/cart/item/{{productId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["cart", "item", "{{productId}}"]
+						},
+						"description": "Update the quantity of an item in the cart.\n\n**Authentication:** Required\n\n**URL Parameters:**\n- `productId` (string): Product ID\n\n**Request Body:**\n- `quantity` (number, required): New quantity (must be at least 1)\n\n**Response:**\n- `cart`: Updated cart object"
+					},
+					"response": [
+						{
+							"name": "Updated",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"cart\": {\n        \"_id\": \"...\",\n        \"items\": [...],\n        \"totalAmount\": 3899.97\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Remove from Cart",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/cart/item/{{productId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["cart", "item", "{{productId}}"]
+						},
+						"description": "Remove an item from the cart.\n\n**Authentication:** Required\n\n**URL Parameters:**\n- `productId` (string): Product ID to remove\n\n**Response:**\n- `cart`: Updated cart object"
+					},
+					"response": [
+						{
+							"name": "Removed",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"cart\": {\n        \"_id\": \"...\",\n        \"items\": [],\n        \"totalAmount\": 0\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Clear Cart",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/cart/clear",
+							"host": ["{{baseUrl}}"],
+							"path": ["cart", "clear"]
+						},
+						"description": "Remove all items from the cart.\n\n**Authentication:** Required\n\n**Response:**\n- `cart`: Empty cart object"
+					},
+					"response": [
+						{
+							"name": "Cleared",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"cart\": {\n        \"_id\": \"...\",\n        \"items\": [],\n        \"totalAmount\": 0\n    }\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Orders",
+			"description": "Order management endpoints for users and admins.",
+			"item": [
+				{
+					"name": "User Orders",
+					"description": "Order endpoints for regular users.",
+					"item": [
+						{
+							"name": "Create Order",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 201) {",
+											"    var jsonData = pm.response.json();",
+											"    pm.collectionVariables.set(\"orderId\", jsonData.order._id);",
+											"    pm.collectionVariables.set(\"orderNumber\", jsonData.order.orderNumber);",
+											"    console.log(\"Order created: \" + jsonData.order.orderNumber);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"shippingAddress\": {\n        \"fullName\": \"John Doe\",\n        \"address\": \"123 Main Street, Apt 4B\",\n        \"city\": \"New York\",\n        \"postalCode\": \"10001\",\n        \"country\": \"United States\",\n        \"phone\": \"+1-555-123-4567\"\n    },\n    \"paymentMethod\": \"cash_on_delivery\",\n    \"notes\": \"Please leave at the door if not home\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/orders",
+									"host": ["{{baseUrl}}"],
+									"path": ["orders"]
+								},
+								"description": "Create a new order from the current cart.\n\n**Authentication:** Required\n\n**Request Body:**\n- `shippingAddress` (object, required):\n  - `fullName` (string): Recipient's name\n  - `address` (string): Street address\n  - `city` (string): City\n  - `postalCode` (string): Postal/ZIP code\n  - `country` (string): Country\n  - `phone` (string, optional): Contact phone\n- `paymentMethod` (string, required): \"card\" or \"cash_on_delivery\"\n- `notes` (string, optional): Delivery notes\n\n**Response:**\n- `order`: Created order object\n\n**Note:** This will clear the user's cart after creating the order."
+							},
+							"response": [
+								{
+									"name": "Order Created",
+									"status": "Created",
+									"code": 201,
+									"_postman_previewlanguage": "json",
+									"body": "{\n    \"order\": {\n        \"_id\": \"507f1f77bcf86cd799439011\",\n        \"orderNumber\": \"ORD-1704067200000-ABC12\",\n        \"user\": \"507f1f77bcf86cd799439012\",\n        \"items\": [\n            {\n                \"product\": \"507f1f77bcf86cd799439013\",\n                \"title\": \"Gaming Laptop\",\n                \"quantity\": 1,\n                \"price\": 1299.99\n            }\n        ],\n        \"shippingAddress\": {\n            \"fullName\": \"John Doe\",\n            \"address\": \"123 Main Street\",\n            \"city\": \"New York\",\n            \"postalCode\": \"10001\",\n            \"country\": \"United States\"\n        },\n        \"paymentMethod\": \"cash_on_delivery\",\n        \"paymentStatus\": \"pending\",\n        \"orderStatus\": \"pending\",\n        \"subtotal\": 1299.99,\n        \"shippingCost\": 0,\n        \"tax\": 129.99,\n        \"totalAmount\": 1429.98,\n        \"createdAt\": \"2024-01-01T00:00:00.000Z\"\n    }\n}"
+								},
+								{
+									"name": "Cart Empty",
+									"status": "Bad Request",
+									"code": 400,
+									"_postman_previewlanguage": "json",
+									"body": "{\n    \"message\": \"Cart is empty\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Get User Orders",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/orders?page=1&limit=10",
+									"host": ["{{baseUrl}}"],
+									"path": ["orders"],
+									"query": [
+										{
+											"key": "page",
+											"value": "1",
+											"description": "Page number (default: 1)"
+										},
+										{
+											"key": "limit",
+											"value": "10",
+											"description": "Items per page (default: 10)"
+										}
+									]
+								},
+								"description": "Get a paginated list of the current user's orders.\n\n**Authentication:** Required\n\n**Query Parameters:**\n- `page` (number): Page number (default: 1)\n- `limit` (number): Items per page (default: 10)\n\n**Response:**\n- `orders`: Array of order objects\n- `total`: Total number of orders\n- `pages`: Total number of pages"
+							},
+							"response": [
+								{
+									"name": "Success",
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"body": "{\n    \"orders\": [\n        {\n            \"_id\": \"...\",\n            \"orderNumber\": \"ORD-1704067200000-ABC12\",\n            \"orderStatus\": \"delivered\",\n            \"totalAmount\": 1429.98,\n            \"createdAt\": \"2024-01-01T00:00:00.000Z\"\n        }\n    ],\n    \"total\": 5,\n    \"pages\": 1\n}"
+								}
+							]
+						},
+						{
+							"name": "Get Order by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/orders/{{orderId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["orders", "{{orderId}}"]
+								},
+								"description": "Get a specific order by its ID.\n\n**Authentication:** Required\n\n**URL Parameters:**\n- `id` (string): Order ID\n\n**Response:**\n- `order`: Order object with full details"
+							},
+							"response": [
+								{
+									"name": "Success",
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"body": "{\n    \"order\": {\n        \"_id\": \"507f1f77bcf86cd799439011\",\n        \"orderNumber\": \"ORD-1704067200000-ABC12\",\n        \"items\": [...],\n        \"shippingAddress\": {...},\n        \"orderStatus\": \"pending\",\n        \"paymentStatus\": \"pending\",\n        \"totalAmount\": 1429.98,\n        \"createdAt\": \"2024-01-01T00:00:00.000Z\"\n    }\n}"
+								}
+							]
+						},
+						{
+							"name": "Get Order by Number",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/orders/number/{{orderNumber}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["orders", "number", "{{orderNumber}}"]
+								},
+								"description": "Get a specific order by its order number.\n\n**Authentication:** Required\n\n**URL Parameters:**\n- `orderNumber` (string): Order number (e.g., ORD-1704067200000-ABC12)\n\n**Response:**\n- `order`: Order object with full details"
+							},
+							"response": [
+								{
+									"name": "Success",
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"body": "{\n    \"order\": {\n        \"_id\": \"...\",\n        \"orderNumber\": \"ORD-1704067200000-ABC12\",\n        \"...\": \"...\"\n    }\n}"
+								}
+							]
+						},
+						{
+							"name": "Cancel Order",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/orders/{{orderId}}/cancel",
+									"host": ["{{baseUrl}}"],
+									"path": ["orders", "{{orderId}}", "cancel"]
+								},
+								"description": "Cancel an order. Only orders with status \"pending\" or \"confirmed\" can be cancelled.\n\n**Authentication:** Required\n\n**URL Parameters:**\n- `id` (string): Order ID\n\n**Response:**\n- `order`: Updated order object with status \"cancelled\"\n\n**Note:** Cancelling an order restores the stock of all items."
+							},
+							"response": [
+								{
+									"name": "Cancelled",
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"body": "{\n    \"order\": {\n        \"_id\": \"...\",\n        \"orderStatus\": \"cancelled\",\n        \"...\": \"...\"\n    }\n}"
+								},
+								{
+									"name": "Cannot Cancel",
+									"status": "Bad Request",
+									"code": 400,
+									"_postman_previewlanguage": "json",
+									"body": "{\n    \"message\": \"Order cannot be cancelled at this stage\"\n}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "Admin Orders",
+					"description": "Order management endpoints for administrators.",
+					"item": [
+						{
+							"name": "Get All Orders (Admin)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/orders/admin/all?page=1&limit=20",
+									"host": ["{{baseUrl}}"],
+									"path": ["orders", "admin", "all"],
+									"query": [
+										{
+											"key": "page",
+											"value": "1",
+											"description": "Page number"
+										},
+										{
+											"key": "limit",
+											"value": "20",
+											"description": "Items per page"
+										},
+										{
+											"key": "status",
+											"value": "pending",
+											"description": "Filter by order status",
+											"disabled": true
+										}
+									]
+								},
+								"description": "Get all orders across all users. Requires admin authentication.\n\n**Authentication:** Required (Admin only)\n\n**Query Parameters:**\n- `page` (number): Page number (default: 1)\n- `limit` (number): Items per page (default: 20)\n- `status` (string): Filter by order status (pending, confirmed, processing, shipped, delivered, cancelled)\n\n**Response:**\n- `orders`: Array of all orders\n- `total`: Total number of orders\n- `pages`: Total number of pages"
+							},
+							"response": [
+								{
+									"name": "Success",
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"body": "{\n    \"orders\": [...],\n    \"total\": 150,\n    \"pages\": 8\n}"
+								}
+							]
+						},
+						{
+							"name": "Update Order Status (Admin)",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"status\": \"shipped\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/orders/admin/{{orderId}}/status",
+									"host": ["{{baseUrl}}"],
+									"path": ["orders", "admin", "{{orderId}}", "status"]
+								},
+								"description": "Update the status of an order. Requires admin authentication.\n\n**Authentication:** Required (Admin only)\n\n**URL Parameters:**\n- `id` (string): Order ID\n\n**Request Body:**\n- `status` (string, required): New order status\n  - Valid values: \"pending\", \"confirmed\", \"processing\", \"shipped\", \"delivered\", \"cancelled\"\n\n**Response:**\n- `order`: Updated order object"
+							},
+							"response": [
+								{
+									"name": "Updated",
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"body": "{\n    \"order\": {\n        \"_id\": \"...\",\n        \"orderStatus\": \"shipped\",\n        \"...\": \"...\"\n    }\n}"
+								}
+							]
+						},
+						{
+							"name": "Update Payment Status (Admin)",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"status\": \"paid\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/orders/admin/{{orderId}}/payment",
+									"host": ["{{baseUrl}}"],
+									"path": ["orders", "admin", "{{orderId}}", "payment"]
+								},
+								"description": "Update the payment status of an order. Requires admin authentication.\n\n**Authentication:** Required (Admin only)\n\n**URL Parameters:**\n- `id` (string): Order ID\n\n**Request Body:**\n- `status` (string, required): New payment status\n  - Valid values: \"pending\", \"paid\", \"failed\", \"refunded\"\n\n**Response:**\n- `order`: Updated order object"
+							},
+							"response": [
+								{
+									"name": "Updated",
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"body": "{\n    \"order\": {\n        \"_id\": \"...\",\n        \"paymentStatus\": \"paid\",\n        \"...\": \"...\"\n    }\n}"
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}
