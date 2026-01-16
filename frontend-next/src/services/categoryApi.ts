@@ -33,7 +33,7 @@ export interface UpdateCategoryPayload extends Partial<CreateCategoryPayload> {}
 export const categoryApi = {
   // Get all categories (flat list)
   getCategories: (params?: { parent?: string | null; active?: boolean }) =>
-    api.get<{ docs: Category[]; total: number }>("/categories", { params }),
+    api.get<{ categories: Category[]; total: number; page: number; limit: number }>("/categories", { params }),
 
   // Get categories as tree structure
   getCategoryTree: () =>

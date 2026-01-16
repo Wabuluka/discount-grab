@@ -2,9 +2,12 @@ import api from "./api";
 
 export interface OrderItem {
   product: string;
+  productId?: string;
   title: string;
   quantity: number;
   price: number;
+  subtotal?: number;
+  image?: string;
 }
 
 export interface ShippingAddress {
@@ -17,7 +20,8 @@ export interface ShippingAddress {
 }
 
 export interface Order {
-  _id: string;
+  id: string;
+  _id?: string; // Keep for backwards compatibility
   orderNumber: string;
   items: OrderItem[];
   shippingAddress: ShippingAddress;
@@ -31,6 +35,12 @@ export interface Order {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+  paidAt?: string;
+  confirmedAt?: string;
+  processingAt?: string;
+  shippedAt?: string;
+  deliveredAt?: string;
+  cancelledAt?: string;
 }
 
 export interface CreateOrderPayload {

@@ -503,7 +503,7 @@ export default function OrdersPage() {
                     const statusConfig = getStatusConfig(order.orderStatus);
                     return (
                       <div
-                        key={order._id}
+                        key={(order.id || order._id!)}
                         className="p-6 hover:bg-slate-50 transition-colors"
                       >
                         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -511,7 +511,7 @@ export default function OrdersPage() {
                           <div className="flex-1">
                             <div className="flex flex-wrap items-center gap-3 mb-2">
                               <Link
-                                href={`/order-confirmation/${order._id}`}
+                                href={`/order-confirmation/${(order.id || order._id!)}`}
                                 className="text-lg font-semibold text-slate-900 hover:text-cyan-600 transition-colors"
                               >
                                 #{order.orderNumber}
@@ -579,7 +579,7 @@ export default function OrdersPage() {
                             </div>
                             <div className="flex items-center gap-2">
                               <Link
-                                href={`/order-confirmation/${order._id}`}
+                                href={`/order-confirmation/${(order.id || order._id!)}`}
                                 className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm font-medium"
                               >
                                 View Details
@@ -588,7 +588,7 @@ export default function OrdersPage() {
                                 order.orderStatus
                               ) && (
                                 <button
-                                  onClick={() => handleCancelOrder(order._id)}
+                                  onClick={() => handleCancelOrder((order.id || order._id!))}
                                   className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium"
                                 >
                                   Cancel

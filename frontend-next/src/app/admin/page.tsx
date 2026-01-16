@@ -215,8 +215,8 @@ export default function AdminDashboard() {
                 No orders yet
               </div>
             ) : (
-              recentOrders.map((order) => (
-                <div key={order._id} className="p-4 hover:bg-gray-50 transition-colors">
+              recentOrders.map((order, index) => (
+                <div key={order._id || index} className="p-4 hover:bg-gray-50 transition-colors">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -229,7 +229,7 @@ export default function AdminDashboard() {
                           {order.orderNumber}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {order.user?.name || "Unknown"} - {order.items.length} items
+                          {order.user?.name || "Unknown"} - {order.items?.length || 0} items
                         </p>
                       </div>
                     </div>

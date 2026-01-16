@@ -31,7 +31,7 @@ const productsSlice = createSlice({
     });
     builder.addCase(fetchProducts.fulfilled, (state, action) => {
       state.loading = false;
-      state.items = action.payload.docs;
+      state.items = action.payload.products;
       state.total = action.payload.total;
     });
     builder.addCase(fetchProducts.rejected, (state) => {

@@ -1,15 +1,36 @@
 import User from "../models/User";
+import { AppError, ErrorCode } from "../middleware/errorHandler";
+import {
+  UserDTO,
+  UserListItemDTO,
+  toUserDTO,
+  toUserListDTO,
+} from "../dto";
 
 export interface UserFilter {
   search?: string;
   role?: "user" | "admin";
 }
 
+export interface UserListResult {
+  users: UserListItemDTO[];
+  total: number;
+  page: number;
+  pages: number;
+}
+
+export interface UserStatsResult {
+  total: number;
+  admins: number;
+  customers: number;
+  recentUsers: UserListItemDTO[];
+}
+
 export async function getAllUsers(
   page: number = 1,
   limit: number = 20,
   filter: UserFilter = {}
-) {
+): Promise<UserListResult> {
   const query: Record<string, unknown> = {};
 
   if (filter.search) {
@@ -29,24 +50,28 @@ export async function getAllUsers(
       .select("-password")
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit),
+      .limit(limit)
+      .lean(),
     User.countDocuments(query),
   ]);
 
   return {
-    users,
+    users: toUserListDTO(users),
     total,
     page,
     pages: Math.ceil(total / limit),
   };
 }
 
-export async function getUserById(id: string) {
+export async function getUserById(id: string): Promise<UserDTO> {
   const user = await User.findById(id).select("-password");
-  return user;
+  if (!user) {
+    throw new AppError("User not found", ErrorCode.USER_NOT_FOUND);
+  }
+  return toUserDTO(user);
 }
 
-export async function getUserStats() {
+export async function getUserStats(): Promise<UserStatsResult> {
   const [total, admins, customers, recentUsers] = await Promise.all([
     User.countDocuments(),
     User.countDocuments({ role: "admin" }),
@@ -54,13 +79,14 @@ export async function getUserStats() {
     User.find()
       .select("-password")
       .sort({ createdAt: -1 })
-      .limit(5),
+      .limit(5)
+      .lean(),
   ]);
 
   return {
     total,
     admins,
     customers,
-    recentUsers,
+    recentUsers: toUserListDTO(recentUsers),
   };
 }

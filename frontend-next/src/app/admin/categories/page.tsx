@@ -35,7 +35,7 @@ export default function AdminCategoriesPage() {
         categoryApi.getCategories(),
       ]);
       setCategories(treeResponse.data.data);
-      setFlatCategories(flatResponse.data.docs);
+      setFlatCategories(flatResponse.data.categories);
       setError(null);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to load categories");

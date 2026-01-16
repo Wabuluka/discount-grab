@@ -1,5 +1,14 @@
+import { AppError, ErrorCode } from "../middleware/errorHandler";
 import Category, { ICategory } from "../models/Category";
 import Product from "../models/Product";
+import {
+  CategoryDTO,
+  CategoryListItemDTO,
+  CategoryTreeNodeDTO,
+  toCategoryDTO,
+  toCategoryListDTO,
+  toCategoryTreeDTO,
+} from "../dto";
 
 // Helper function to generate slug from name
 const generateSlug = (name: string): string => {
@@ -9,22 +18,42 @@ const generateSlug = (name: string): string => {
     .replace(/(^-|-$)/g, "");
 };
 
-export const createCategory = async (payload: Partial<ICategory>) => {
+export const createCategory = async (payload: Partial<ICategory>): Promise<CategoryDTO> => {
   // Auto-generate slug if not provided
   if (!payload.slug && payload.name) {
     payload.slug = generateSlug(payload.name);
   }
 
   // Handle empty string parent - should be null/undefined for root categories
-  if (payload.parent === "" || payload.parent === null) {
+  if (payload.parent === ("" as any) || payload.parent === null) {
     delete payload.parent;
   }
 
+  // Check if slug already exists
+  if (payload.slug) {
+    const existing = await Category.findOne({ slug: payload.slug });
+    if (existing) {
+      throw new AppError(
+        `Category with slug "${payload.slug}" already exists`,
+        ErrorCode.SLUG_EXISTS
+      );
+    }
+  }
+
   const category = new Category(payload);
-  return await category.save();
+  const saved = await category.save();
+  const populated = await Category.findById(saved._id).populate("parent", "name slug");
+  return toCategoryDTO(populated!);
 };
 
-export const findCategories = async (filter: any = {}, opts: any = {}) => {
+export interface CategoryListResult {
+  categories: CategoryListItemDTO[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export const findCategories = async (filter: any = {}, opts: any = {}): Promise<CategoryListResult> => {
   const { page = 1, limit = 100, sort = "name" } = opts;
   const skip = (page - 1) * limit;
   const docs = await Category.find(filter)
@@ -34,11 +63,16 @@ export const findCategories = async (filter: any = {}, opts: any = {}) => {
     .limit(Number(limit))
     .lean();
   const total = await Category.countDocuments(filter);
-  return { docs, total, page, limit: Number(limit) };
+  return {
+    categories: toCategoryListDTO(docs),
+    total,
+    page,
+    limit: Number(limit),
+  };
 };
 
 // Get all categories in a tree structure with product counts
-export const getCategoryTree = async () => {
+export const getCategoryTree = async (): Promise<CategoryTreeNodeDTO[]> => {
   const categories = await Category.find({ isActive: true })
     .sort("name")
     .lean();
@@ -93,19 +127,46 @@ export const getCategoryTree = async () => {
 
   tree.forEach(calculateTotalProducts);
 
-  return tree;
+  return toCategoryTreeDTO(tree);
 };
 
-export const findCategoryById = async (id: string) =>
-  Category.findById(id).populate("parent", "name slug");
+export const findCategoryById = async (id: string): Promise<CategoryDTO> => {
+  const category = await Category.findById(id).populate("parent", "name slug");
+  if (!category) {
+    throw new AppError("Category not found", ErrorCode.CATEGORY_NOT_FOUND);
+  }
+  return toCategoryDTO(category);
+};
 
-export const findCategoryBySlug = async (slug: string) =>
-  Category.findOne({ slug }).populate("parent", "name slug");
+export const findCategoryBySlug = async (slug: string): Promise<CategoryDTO> => {
+  const category = await Category.findOne({ slug }).populate("parent", "name slug");
+  if (!category) {
+    throw new AppError("Category not found", ErrorCode.CATEGORY_NOT_FOUND);
+  }
+  return toCategoryDTO(category);
+};
 
-export const updateCategory = async (id: string, update: Partial<ICategory>) => {
+export const updateCategory = async (id: string, update: Partial<ICategory>): Promise<CategoryDTO> => {
+  // Check if category exists
+  const existing = await Category.findById(id);
+  if (!existing) {
+    throw new AppError("Category not found", ErrorCode.CATEGORY_NOT_FOUND);
+  }
+
   // Auto-generate slug if name is updated and slug is not provided
   if (update.name && !update.slug) {
     update.slug = generateSlug(update.name);
+  }
+
+  // Check if new slug conflicts with existing category
+  if (update.slug && update.slug !== existing.slug) {
+    const slugConflict = await Category.findOne({ slug: update.slug, _id: { $ne: id } });
+    if (slugConflict) {
+      throw new AppError(
+        `Category with slug "${update.slug}" already exists`,
+        ErrorCode.SLUG_EXISTS
+      );
+    }
   }
 
   // Clean up the update object - handle empty string for parent field
@@ -135,16 +196,24 @@ export const updateCategory = async (id: string, update: Partial<ICategory>) => 
 
   // If nothing to update, just return the existing document
   if (Object.keys(updateQuery).length === 0) {
-    return Category.findById(id).populate("parent", "name slug");
+    const cat = await Category.findById(id).populate("parent", "name slug");
+    return toCategoryDTO(cat!);
   }
 
-  return Category.findByIdAndUpdate(id, updateQuery, { new: true }).populate(
+  const updated = await Category.findByIdAndUpdate(id, updateQuery, { new: true }).populate(
     "parent",
     "name slug"
   );
+  return toCategoryDTO(updated!);
 };
 
-export const deleteCategory = async (id: string) => {
+export const deleteCategory = async (id: string): Promise<void> => {
+  // Check if category exists
+  const existing = await Category.findById(id);
+  if (!existing) {
+    throw new AppError("Category not found", ErrorCode.CATEGORY_NOT_FOUND);
+  }
+
   // Recursively get all descendant category IDs
   const getAllDescendantIds = async (parentId: string): Promise<string[]> => {
     const children = await Category.find({ parent: parentId }).select("_id").lean();
@@ -169,12 +238,20 @@ export const deleteCategory = async (id: string) => {
   }
 
   // Delete the category itself
-  return Category.findByIdAndDelete(id);
+  await Category.findByIdAndDelete(id);
 };
 
 // Get subcategories of a category
-export const getSubcategories = async (parentId: string) => {
-  return Category.find({ parent: parentId, isActive: true })
+export const getSubcategories = async (parentId: string): Promise<CategoryListItemDTO[]> => {
+  // Verify parent exists
+  const parent = await Category.findById(parentId);
+  if (!parent) {
+    throw new AppError("Parent category not found", ErrorCode.CATEGORY_NOT_FOUND);
+  }
+
+  const subcategories = await Category.find({ parent: parentId, isActive: true })
     .sort("name")
     .lean();
+
+  return toCategoryListDTO(subcategories);
 };

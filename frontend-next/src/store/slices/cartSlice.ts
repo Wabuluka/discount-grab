@@ -1,11 +1,13 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { Cart } from "@/services/cartApi";
 import { cartApi } from "@/services/cartApi";
+import { parseApiError, getErrorMessage, ErrorCode } from "@/types/error";
 
 interface CartState {
   cart: Cart | null;
   loading: boolean;
   error: string | null;
+  errorCode: ErrorCode | null;
   itemCount: number;
 }
 
@@ -13,8 +15,14 @@ const initialState: CartState = {
   cart: null,
   loading: false,
   error: null,
+  errorCode: null,
   itemCount: 0,
 };
+
+interface CartErrorPayload {
+  message: string;
+  code: ErrorCode;
+}
 
 export const fetchCart = createAsyncThunk(
   "cart/fetch",
@@ -23,8 +31,11 @@ export const fetchCart = createAsyncThunk(
       const res = await cartApi.getCart();
       return res.data.cart;
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      return rejectWithValue(error.response?.data?.message || "Failed to fetch cart");
+      const apiError = parseApiError(err);
+      return rejectWithValue({
+        message: getErrorMessage(apiError),
+        code: apiError.code,
+      });
     }
   }
 );
@@ -39,8 +50,11 @@ export const addToCart = createAsyncThunk(
       const res = await cartApi.addToCart(productId, quantity);
       return res.data.cart;
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      return rejectWithValue(error.response?.data?.message || "Failed to add to cart");
+      const apiError = parseApiError(err);
+      return rejectWithValue({
+        message: getErrorMessage(apiError),
+        code: apiError.code,
+      });
     }
   }
 );
@@ -55,8 +69,11 @@ export const updateCartItem = createAsyncThunk(
       const res = await cartApi.updateItem(productId, quantity);
       return res.data.cart;
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      return rejectWithValue(error.response?.data?.message || "Failed to update cart");
+      const apiError = parseApiError(err);
+      return rejectWithValue({
+        message: getErrorMessage(apiError),
+        code: apiError.code,
+      });
     }
   }
 );
@@ -68,8 +85,11 @@ export const removeFromCart = createAsyncThunk(
       const res = await cartApi.removeItem(productId);
       return res.data.cart;
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      return rejectWithValue(error.response?.data?.message || "Failed to remove from cart");
+      const apiError = parseApiError(err);
+      return rejectWithValue({
+        message: getErrorMessage(apiError),
+        code: apiError.code,
+      });
     }
   }
 );
@@ -81,8 +101,11 @@ export const clearCart = createAsyncThunk(
       const res = await cartApi.clearCart();
       return res.data.cart;
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      return rejectWithValue(error.response?.data?.message || "Failed to clear cart");
+      const apiError = parseApiError(err);
+      return rejectWithValue({
+        message: getErrorMessage(apiError),
+        code: apiError.code,
+      });
     }
   }
 );
@@ -95,9 +118,11 @@ const cartSlice = createSlice({
       state.cart = null;
       state.itemCount = 0;
       state.error = null;
+      state.errorCode = null;
     },
     clearCartError: (state) => {
       state.error = null;
+      state.errorCode = null;
     },
   },
   extraReducers: (builder) => {
@@ -106,6 +131,19 @@ const cartSlice = createSlice({
       state.itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
       state.loading = false;
       state.error = null;
+      state.errorCode = null;
+    };
+
+    const setErrorState = (state: CartState, payload: unknown) => {
+      state.loading = false;
+      const errorPayload = payload as CartErrorPayload | undefined;
+      if (errorPayload) {
+        state.error = errorPayload.message;
+        state.errorCode = errorPayload.code;
+      } else {
+        state.error = "An unexpected error occurred";
+        state.errorCode = ErrorCode.INTERNAL_ERROR;
+      }
     };
 
     builder
@@ -116,8 +154,7 @@ const cartSlice = createSlice({
         setCartState(state, action.payload);
       })
       .addCase(fetchCart.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
+        setErrorState(state, action.payload);
       })
       .addCase(addToCart.pending, (state) => {
         state.loading = true;
@@ -126,8 +163,7 @@ const cartSlice = createSlice({
         setCartState(state, action.payload);
       })
       .addCase(addToCart.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
+        setErrorState(state, action.payload);
       })
       .addCase(updateCartItem.pending, (state) => {
         state.loading = true;
@@ -136,8 +172,7 @@ const cartSlice = createSlice({
         setCartState(state, action.payload);
       })
       .addCase(updateCartItem.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
+        setErrorState(state, action.payload);
       })
       .addCase(removeFromCart.pending, (state) => {
         state.loading = true;
@@ -146,8 +181,7 @@ const cartSlice = createSlice({
         setCartState(state, action.payload);
       })
       .addCase(removeFromCart.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
+        setErrorState(state, action.payload);
       })
       .addCase(clearCart.pending, (state) => {
         state.loading = true;
@@ -156,8 +190,7 @@ const cartSlice = createSlice({
         setCartState(state, action.payload);
       })
       .addCase(clearCart.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
+        setErrorState(state, action.payload);
       });
   },
 });

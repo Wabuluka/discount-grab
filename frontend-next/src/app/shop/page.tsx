@@ -5,6 +5,7 @@ import { useGetProducts } from "@/hooks/useGetProducts";
 import type { Product } from "@/types/product";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { categoryApi, Category } from "@/services/categoryApi";
 import CategoryTree from "@/components/CategoryTree";
 
@@ -31,13 +32,22 @@ const getProductCategoryName = (product: Product): string | null => {
   return null;
 };
 
-// Flatten categories tree for dropdown
-const flattenCategories = (categories: Category[]): Category[] => {
-  const result: Category[] = [];
+// Flatten categories tree for dropdown with parent info
+interface FlatCategory extends Category {
+  parentName?: string;
+}
+
+const flattenCategories = (categories: Category[], parentName?: string): FlatCategory[] => {
+  const result: FlatCategory[] = [];
   categories.forEach((cat) => {
-    result.push(cat);
+    // Only set parentName if it's a valid non-empty string
+    const validParentName = parentName && parentName.trim() ? parentName : undefined;
+    const flatCat: FlatCategory = { ...cat, parentName: validParentName };
+    result.push(flatCat);
     if (cat.subcategories && cat.subcategories.length > 0) {
-      result.push(...flattenCategories(cat.subcategories));
+      // Only pass cat.name if it's a valid string
+      const nextParentName = cat.name && cat.name.trim() ? cat.name : undefined;
+      result.push(...flattenCategories(cat.subcategories, nextParentName));
     }
   });
   return result;
@@ -76,6 +86,9 @@ const getCategoryAndChildrenIds = (
 
 export default function ShopPage() {
   const { data, isLoading } = useGetProducts();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
@@ -84,6 +97,27 @@ export default function ShopPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Read category from URL on mount
+  useEffect(() => {
+    const categoryParam = searchParams.get("category");
+    if (categoryParam) {
+      setSelectedCategory(categoryParam);
+    }
+  }, [searchParams]);
+
+  // Update URL when category changes
+  const handleCategoryChange = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    const params = new URLSearchParams(searchParams.toString());
+    if (categoryId === "all") {
+      params.delete("category");
+    } else {
+      params.set("category", categoryId);
+    }
+    const newUrl = params.toString() ? `/shop?${params.toString()}` : "/shop";
+    router.push(newUrl, { scroll: false });
+  };
 
   // Fetch categories from database
   useEffect(() => {
@@ -102,9 +136,9 @@ export default function ShopPage() {
 
   // Filter and sort products
   const filteredProducts = useMemo(() => {
-    if (!data?.docs) return [];
+    if (!data?.products) return [];
 
-    let products = [...data.docs] as Product[];
+    let products = [...data.products] as Product[];
 
     // Search filter
     if (searchQuery) {
@@ -150,11 +184,11 @@ export default function ShopPage() {
     }
 
     return products;
-  }, [data?.docs, searchQuery, selectedCategory, sortBy, priceRange]);
+  }, [data?.products, searchQuery, selectedCategory, sortBy, priceRange, categories]);
 
   const clearFilters = () => {
     setSearchQuery("");
-    setSelectedCategory("all");
+    handleCategoryChange("all");
     setSortBy("newest");
     setPriceRange([0, 10000000]);
   };
@@ -166,7 +200,7 @@ export default function ShopPage() {
     priceRange[1] < 10000000;
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-slate-50 to-white mt-20">
+    <div className="min-h-screen bg-linear-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-900 mt-20">
       {/* Hero Banner */}
       <div className="bg-linear-to-r from-cyan-600 via-blue-600 to-indigo-700 text-white">
         <div className="max-w-7xl mx-auto px-4 py-12 sm:py-16">
@@ -203,11 +237,11 @@ export default function ShopPage() {
         <div className="flex gap-8">
           {/* Category Sidebar - Desktop */}
           <aside className="hidden lg:block w-72 shrink-0">
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 sticky top-24">
-              <div className="p-4 border-b border-slate-100">
-                <h2 className="font-semibold text-slate-900 flex items-center gap-2">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 sticky top-24">
+              <div className="p-4 border-b border-slate-100 dark:border-slate-700">
+                <h2 className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <svg
-                    className="w-5 h-5 text-cyan-600"
+                    className="w-5 h-5 text-cyan-600 dark:text-cyan-400"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -230,11 +264,11 @@ export default function ShopPage() {
                 <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
                   <div className="py-2">
                     <button
-                      onClick={() => setSelectedCategory("all")}
+                      onClick={() => handleCategoryChange("all")}
                       className={`w-full flex items-center gap-2 px-4 py-2.5 text-left transition-colors ${
                         selectedCategory === "all"
-                          ? "bg-cyan-50 text-cyan-700 font-medium border-l-2 border-cyan-600"
-                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                          ? "bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 font-medium border-l-2 border-cyan-600 dark:border-cyan-400"
+                          : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100"
                       }`}
                     >
                       <svg
@@ -253,11 +287,11 @@ export default function ShopPage() {
                       All Categories
                     </button>
                   </div>
-                  <div className="border-t border-slate-100">
+                  <div className="border-t border-slate-100 dark:border-slate-700">
                     <CategoryTree
                       categories={categories}
                       selectedCategory={selectedCategory}
-                      onSelectCategory={(id) => setSelectedCategory(id)}
+                      onSelectCategory={(id) => handleCategoryChange(id)}
                       variant="sidebar"
                     />
                   </div>
@@ -277,15 +311,15 @@ export default function ShopPage() {
               onClick={() => setSidebarOpen(false)}
             />
             <div
-              className={`absolute left-0 top-0 h-full w-80 max-w-[85vw] bg-white shadow-xl transform transition-transform duration-300 ${
+              className={`absolute left-0 top-0 h-full w-80 max-w-[85vw] bg-white dark:bg-slate-900 shadow-xl transform transition-transform duration-300 ${
                 sidebarOpen ? "translate-x-0" : "-translate-x-full"
               }`}
             >
-              <div className="flex items-center justify-between p-4 border-b border-slate-200">
-                <h2 className="font-semibold text-slate-900">Categories</h2>
+              <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
+                <h2 className="font-semibold text-slate-900 dark:text-slate-100">Categories</h2>
                 <button
                   onClick={() => setSidebarOpen(false)}
-                  className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg"
+                  className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
                 >
                   <svg
                     className="w-5 h-5"
@@ -306,24 +340,24 @@ export default function ShopPage() {
                 <div className="py-2">
                   <button
                     onClick={() => {
-                      setSelectedCategory("all");
+                      handleCategoryChange("all");
                       setSidebarOpen(false);
                     }}
                     className={`w-full flex items-center gap-2 px-4 py-2.5 text-left transition-colors ${
                       selectedCategory === "all"
-                        ? "bg-cyan-50 text-cyan-700 font-medium"
-                        : "text-slate-600 hover:bg-slate-50"
+                        ? "bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 font-medium"
+                        : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                     }`}
                   >
                     All Categories
                   </button>
                 </div>
-                <div className="border-t border-slate-100">
+                <div className="border-t border-slate-100 dark:border-slate-700">
                   <CategoryTree
                     categories={categories}
                     selectedCategory={selectedCategory}
                     onSelectCategory={(id) => {
-                      setSelectedCategory(id);
+                      handleCategoryChange(id);
                       setSidebarOpen(false);
                     }}
                     variant="sidebar"
@@ -336,12 +370,12 @@ export default function ShopPage() {
           {/* Main Content */}
           <div className="flex-1 min-w-0">
         {/* Search and Filters Bar */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 mb-8">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 sm:p-6 mb-8">
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Mobile Category Button */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden flex items-center gap-2 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 hover:bg-slate-100 transition-colors"
+              className="lg:hidden flex items-center gap-2 px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors"
             >
               <svg
                 className="w-5 h-5"
@@ -362,7 +396,7 @@ export default function ShopPage() {
             {/* Search Input */}
             <div className="relative flex-1">
               <svg
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -379,7 +413,7 @@ export default function ShopPage() {
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+                className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 focus:border-transparent transition-all"
               />
             </div>
 
@@ -387,19 +421,21 @@ export default function ShopPage() {
             <div className="relative lg:hidden">
               <select
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="appearance-none w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all cursor-pointer pr-10"
+                onChange={(e) => handleCategoryChange(e.target.value)}
+                className="appearance-none w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 focus:border-transparent transition-all cursor-pointer pr-10"
                 disabled={categoriesLoading}
               >
                 <option value="all">All Categories</option>
                 {flattenCategories(categories).map((cat) => (
                   <option key={cat._id} value={cat._id}>
-                    {cat.parent ? `${cat.parent.name} → ${cat.name}` : cat.name}
+                    {cat.parentName && cat.parentName !== "undefined"
+                      ? `${cat.parentName} → ${cat.name}`
+                      : cat.name || "Unnamed Category"}
                   </option>
                 ))}
               </select>
               <svg
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -418,7 +454,7 @@ export default function ShopPage() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="appearance-none w-full lg:w-48 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all cursor-pointer pr-10"
+                className="appearance-none w-full lg:w-48 px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 focus:border-transparent transition-all cursor-pointer pr-10"
               >
                 <option value="newest">Newest First</option>
                 <option value="price-low">Price: Low to High</option>
@@ -426,7 +462,7 @@ export default function ShopPage() {
                 <option value="name">Name: A to Z</option>
               </select>
               <svg
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -441,13 +477,13 @@ export default function ShopPage() {
             </div>
 
             {/* View Toggle */}
-            <div className="flex bg-slate-100 rounded-xl p-1">
+            <div className="flex bg-slate-100 dark:bg-slate-700 rounded-xl p-1">
               <button
                 onClick={() => setViewMode("grid")}
                 className={`p-2.5 rounded-lg transition-all ${
                   viewMode === "grid"
-                    ? "bg-white text-cyan-600 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
+                    ? "bg-white dark:bg-slate-600 text-cyan-600 dark:text-cyan-400 shadow-sm"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                 }`}
                 aria-label="Grid view"
               >
@@ -469,8 +505,8 @@ export default function ShopPage() {
                 onClick={() => setViewMode("list")}
                 className={`p-2.5 rounded-lg transition-all ${
                   viewMode === "list"
-                    ? "bg-white text-cyan-600 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
+                    ? "bg-white dark:bg-slate-600 text-cyan-600 dark:text-cyan-400 shadow-sm"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                 }`}
                 aria-label="List view"
               >
@@ -493,10 +529,10 @@ export default function ShopPage() {
 
           {/* Active Filters */}
           {hasActiveFilters && (
-            <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-slate-100">
-              <span className="text-sm text-slate-500">Active filters:</span>
+            <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+              <span className="text-sm text-slate-500 dark:text-slate-400">Active filters:</span>
               {searchQuery && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-cyan-50 text-cyan-700 rounded-full text-sm">
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 rounded-full text-sm">
                   Search: {searchQuery}
                   <button
                     onClick={() => setSearchQuery("")}
@@ -519,10 +555,10 @@ export default function ShopPage() {
                 </span>
               )}
               {selectedCategory !== "all" && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm">
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-sm">
                   {flattenCategories(categories).find((c) => c._id === selectedCategory)?.name || selectedCategory}
                   <button
-                    onClick={() => setSelectedCategory("all")}
+                    onClick={() => handleCategoryChange("all")}
                     className="ml-1 hover:text-blue-900"
                   >
                     <svg
@@ -543,7 +579,7 @@ export default function ShopPage() {
               )}
               <button
                 onClick={clearFilters}
-                className="text-sm text-slate-500 hover:text-slate-700 underline ml-2"
+                className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 underline ml-2"
               >
                 Clear all
               </button>
@@ -553,21 +589,21 @@ export default function ShopPage() {
 
         {/* Results Count */}
         <div className="flex items-center justify-between mb-6">
-          <p className="text-slate-600">
+          <p className="text-slate-600 dark:text-slate-400">
             {isLoading ? (
               <span className="inline-flex items-center gap-2">
-                <span className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></span>
+                <span className="w-4 h-4 border-2 border-cyan-500 dark:border-cyan-400 border-t-transparent rounded-full animate-spin"></span>
                 Loading products...
               </span>
             ) : (
               <>
                 Showing{" "}
-                <span className="font-semibold text-slate-900">
+                <span className="font-semibold text-slate-900 dark:text-slate-100">
                   {filteredProducts.length}
                 </span>{" "}
                 {filteredProducts.length === 1 ? "product" : "products"}
                 {hasActiveFilters && (
-                  <span className="text-slate-400"> (filtered)</span>
+                  <span className="text-slate-400 dark:text-slate-500"> (filtered)</span>
                 )}
               </>
             )}
@@ -580,15 +616,15 @@ export default function ShopPage() {
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
-                className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100"
+                className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-700"
               >
-                <div className="aspect-square bg-slate-100 animate-pulse" />
+                <div className="aspect-square bg-slate-100 dark:bg-slate-700 animate-pulse" />
                 <div className="p-4 space-y-3">
-                  <div className="h-4 bg-slate-100 rounded animate-pulse w-3/4" />
-                  <div className="h-4 bg-slate-100 rounded animate-pulse w-1/2" />
+                  <div className="h-4 bg-slate-100 dark:bg-slate-700 rounded animate-pulse w-3/4" />
+                  <div className="h-4 bg-slate-100 dark:bg-slate-700 rounded animate-pulse w-1/2" />
                   <div className="flex justify-between items-center pt-2">
-                    <div className="h-6 bg-slate-100 rounded animate-pulse w-24" />
-                    <div className="h-10 w-10 bg-slate-100 rounded-xl animate-pulse" />
+                    <div className="h-6 bg-slate-100 dark:bg-slate-700 rounded animate-pulse w-24" />
+                    <div className="h-10 w-10 bg-slate-100 dark:bg-slate-700 rounded-xl animate-pulse" />
                   </div>
                 </div>
               </div>
@@ -608,7 +644,7 @@ export default function ShopPage() {
             {filteredProducts.map((item: Product) => (
               <div
                 key={item._id}
-                className={`bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-lg hover:border-slate-200 transition-all duration-300 ${
+                className={`bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-lg hover:border-slate-200 dark:hover:border-slate-600 transition-all duration-300 ${
                   viewMode === "list" ? "flex flex-row" : ""
                 }`}
               >
@@ -625,9 +661,9 @@ export default function ShopPage() {
         {/* Empty State */}
         {!isLoading && filteredProducts.length === 0 && (
           <div className="text-center py-16">
-            <div className="w-24 h-24 mx-auto mb-6 bg-slate-100 rounded-full flex items-center justify-center">
+            <div className="w-24 h-24 mx-auto mb-6 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center">
               <svg
-                className="w-12 h-12 text-slate-400"
+                className="w-12 h-12 text-slate-400 dark:text-slate-500"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -640,10 +676,10 @@ export default function ShopPage() {
                 />
               </svg>
             </div>
-            <h2 className="text-2xl font-semibold text-slate-900 mb-2">
+            <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
               No products found
             </h2>
-            <p className="text-slate-500 mb-6 max-w-md mx-auto">
+            <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-md mx-auto">
               {hasActiveFilters
                 ? "Try adjusting your search or filter criteria to find what you're looking for."
                 : "Check back later for new products."}
@@ -687,7 +723,7 @@ function ListCard({ item }: { item: Product }) {
 
   return (
     <div className="flex flex-col sm:flex-row w-full">
-      <div className="relative w-full sm:w-48 h-48 sm:h-auto shrink-0 bg-slate-100">
+      <div className="relative w-full sm:w-48 h-48 sm:h-auto shrink-0 bg-slate-100 dark:bg-slate-700">
         <Link href={`/product/${item._id}`}>
           <Image
             src={
@@ -710,26 +746,26 @@ function ListCard({ item }: { item: Product }) {
       <div className="flex-1 p-4 sm:p-6 flex flex-col justify-between">
         <div>
           <Link href={`/product/${item._id}`}>
-            <h3 className="text-lg font-semibold text-slate-900 hover:text-cyan-600 transition-colors mb-2">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors mb-2">
               {item.title}
             </h3>
           </Link>
           {getProductCategoryName(item) && (
-            <span className="inline-block px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-md mb-2">
+            <span className="inline-block px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs rounded-md mb-2">
               {getProductCategoryName(item)}
             </span>
           )}
-          <p className="text-slate-500 text-sm line-clamp-2">
+          <p className="text-slate-500 dark:text-slate-400 text-sm line-clamp-2">
             {item.description}
           </p>
         </div>
-        <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
-          <span className="text-xl font-bold text-cyan-600">
+        <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+          <span className="text-xl font-bold text-cyan-600 dark:text-cyan-400">
             {formatAsCurrency(item.price)}
           </span>
           <div className="flex items-center gap-3">
             {item.stock > 0 && (
-              <span className="text-sm text-green-600 font-medium">
+              <span className="text-sm text-green-600 dark:text-green-400 font-medium">
                 In Stock
               </span>
             )}

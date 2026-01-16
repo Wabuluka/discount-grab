@@ -1,8 +1,18 @@
 import crypto from "crypto";
-import { AppError } from "../middleware/errorHandler";
+import { AppError, ErrorCode } from "../middleware/errorHandler";
 import Cart from "../models/Cart";
 import Order, { IOrder, IShippingAddress } from "../models/Order";
 import Product from "../models/Product";
+import {
+  OrderDTO,
+  OrderListItemDTO,
+  AdminOrderDTO,
+  AdminOrderListItemDTO,
+  toOrderDTO,
+  toOrderListDTO,
+  toAdminOrderDTO,
+  toAdminOrderListDTO,
+} from "../dto";
 
 const generateOrderNumber = (): string => {
   const timestamp = Date.now().toString(36).toUpperCase();
@@ -15,20 +25,26 @@ export const createOrder = async (
   shippingAddress: IShippingAddress,
   paymentMethod: "card" | "cash_on_delivery",
   notes?: string
-): Promise<IOrder> => {
+): Promise<OrderDTO> => {
   const cart = await Cart.findOne({ user: userId }).populate("items.product");
   if (!cart || cart.items.length === 0) {
-    throw new AppError("Cart is empty", 400);
+    throw new AppError("Your cart is empty. Add items before placing an order", ErrorCode.CART_EMPTY);
   }
 
   const orderItems = [];
   for (const item of cart.items) {
     const product = await Product.findById(item.product);
     if (!product) {
-      throw new AppError(`Product not found: ${item.product}`, 404);
+      throw new AppError(
+        `Product is no longer available: ${item.product}`,
+        ErrorCode.PRODUCT_NOT_FOUND
+      );
     }
     if (product.stock < item.quantity) {
-      throw new AppError(`Insufficient stock for ${product.title}`, 400);
+      throw new AppError(
+        `Insufficient stock for "${product.title}". Only ${product.stock} available`,
+        ErrorCode.INSUFFICIENT_STOCK
+      );
     }
     orderItems.push({
       product: product._id,
@@ -71,43 +87,54 @@ export const createOrder = async (
   cart.totalAmount = 0;
   await cart.save();
 
-  return order;
+  return toOrderDTO(order);
 };
 
 export const getOrderById = async (
   userId: string,
   orderId: string
-): Promise<IOrder> => {
+): Promise<OrderDTO> => {
   const order = await Order.findOne({ _id: orderId, user: userId });
-  if (!order) throw new AppError("Order not found", 404);
-  return order;
+  if (!order) {
+    throw new AppError("Order not found", ErrorCode.ORDER_NOT_FOUND);
+  }
+  return toOrderDTO(order);
 };
 
 export const getOrderByNumber = async (
   userId: string,
   orderNumber: string
-): Promise<IOrder> => {
+): Promise<OrderDTO> => {
   const order = await Order.findOne({ orderNumber, user: userId });
-  if (!order) throw new AppError("Order not found", 404);
-  return order;
+  if (!order) {
+    throw new AppError("Order not found", ErrorCode.ORDER_NOT_FOUND);
+  }
+  return toOrderDTO(order);
 };
+
+export interface OrderListResult {
+  orders: OrderListItemDTO[];
+  total: number;
+  pages: number;
+}
 
 export const getUserOrders = async (
   userId: string,
   page = 1,
   limit = 10
-): Promise<{ orders: IOrder[]; total: number; pages: number }> => {
+): Promise<OrderListResult> => {
   const skip = (page - 1) * limit;
   const [orders, total] = await Promise.all([
     Order.find({ user: userId })
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit),
+      .limit(limit)
+      .lean(),
     Order.countDocuments({ user: userId }),
   ]);
 
   return {
-    orders,
+    orders: toOrderListDTO(orders),
     total,
     pages: Math.ceil(total / limit),
   };
@@ -116,12 +143,17 @@ export const getUserOrders = async (
 export const cancelOrder = async (
   userId: string,
   orderId: string
-): Promise<IOrder> => {
+): Promise<OrderDTO> => {
   const order = await Order.findOne({ _id: orderId, user: userId });
-  if (!order) throw new AppError("Order not found", 404);
+  if (!order) {
+    throw new AppError("Order not found", ErrorCode.ORDER_NOT_FOUND);
+  }
 
   if (!["pending", "confirmed"].includes(order.orderStatus)) {
-    throw new AppError("Order cannot be cancelled at this stage", 400);
+    throw new AppError(
+      `Order cannot be cancelled. Current status: ${order.orderStatus}`,
+      ErrorCode.ORDER_CANNOT_CANCEL
+    );
   }
 
   for (const item of order.items) {
@@ -133,20 +165,21 @@ export const cancelOrder = async (
   order.orderStatus = "cancelled";
   order.cancelledAt = new Date();
   await order.save();
-  return order;
+  return toOrderDTO(order);
 };
 
 export const updateOrderStatus = async (
   orderId: string,
   status: IOrder["orderStatus"]
-): Promise<IOrder> => {
-  const order = await Order.findById(orderId);
-  if (!order) throw new AppError("Order not found", 404);
+): Promise<AdminOrderDTO> => {
+  const order = await Order.findById(orderId).populate("user", "email name");
+  if (!order) {
+    throw new AppError("Order not found", ErrorCode.ORDER_NOT_FOUND);
+  }
 
   order.orderStatus = status;
   const now = new Date();
 
-  // Set appropriate timestamp based on status
   switch (status) {
     case "confirmed":
       order.confirmedAt = now;
@@ -166,15 +199,17 @@ export const updateOrderStatus = async (
   }
 
   await order.save();
-  return order;
+  return toAdminOrderDTO(order);
 };
 
 export const updatePaymentStatus = async (
   orderId: string,
   status: IOrder["paymentStatus"]
-): Promise<IOrder> => {
-  const order = await Order.findById(orderId);
-  if (!order) throw new AppError("Order not found", 404);
+): Promise<AdminOrderDTO> => {
+  const order = await Order.findById(orderId).populate("user", "email name");
+  if (!order) {
+    throw new AppError("Order not found", ErrorCode.ORDER_NOT_FOUND);
+  }
 
   order.paymentStatus = status;
   const now = new Date();
@@ -187,14 +222,20 @@ export const updatePaymentStatus = async (
     }
   }
   await order.save();
-  return order;
+  return toAdminOrderDTO(order);
 };
+
+export interface AdminOrderListResult {
+  orders: AdminOrderListItemDTO[];
+  total: number;
+  pages: number;
+}
 
 export const getAllOrders = async (
   page = 1,
   limit = 20,
   status?: string
-): Promise<{ orders: IOrder[]; total: number; pages: number }> => {
+): Promise<AdminOrderListResult> => {
   const skip = (page - 1) * limit;
   const query = status ? { orderStatus: status } : {};
 
@@ -203,12 +244,13 @@ export const getAllOrders = async (
       .populate("user", "email name")
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit),
+      .limit(limit)
+      .lean(),
     Order.countDocuments(query),
   ]);
 
   return {
-    orders,
+    orders: toAdminOrderListDTO(orders),
     total,
     pages: Math.ceil(total / limit),
   };

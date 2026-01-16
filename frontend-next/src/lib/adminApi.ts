@@ -90,7 +90,7 @@ export const adminProductApi = {
 
   getAll: async (): Promise<Product[]> => {
     const response = await api.get("/products");
-    return response.data.docs;
+    return response.data.products;
   },
 
   getById: async (id: string): Promise<Product> => {

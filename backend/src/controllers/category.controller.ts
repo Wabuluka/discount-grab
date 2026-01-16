@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { AppError } from "../middleware/errorHandler";
+import { AppError, ErrorCode } from "../middleware/errorHandler";
 import * as CategoryService from "../service/category.service";
 
 export const create = async (
@@ -12,7 +12,7 @@ export const create = async (
     res.status(201).json({ data: category });
   } catch (err: any) {
     if (err.code === 11000) {
-      next(new AppError("Category with this slug already exists", 400));
+      next(new AppError("Category with this slug already exists", ErrorCode.SLUG_EXISTS));
     } else {
       next(err);
     }
@@ -56,7 +56,6 @@ export const tree = async (req: Request, res: Response, next: NextFunction) => {
 export const get = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const category = await CategoryService.findCategoryById(req.params.id);
-    if (!category) throw new AppError("Category not found", 404);
     res.json({ data: category });
   } catch (err) {
     next(err);
@@ -70,7 +69,6 @@ export const getBySlug = async (
 ) => {
   try {
     const category = await CategoryService.findCategoryBySlug(req.params.slug);
-    if (!category) throw new AppError("Category not found", 404);
     res.json({ data: category });
   } catch (err) {
     next(err);
@@ -87,11 +85,10 @@ export const update = async (
       req.params.id,
       req.body
     );
-    if (!category) throw new AppError("Category not found", 404);
     res.json({ data: category });
   } catch (err: any) {
     if (err.code === 11000) {
-      next(new AppError("Category with this slug already exists", 400));
+      next(new AppError("Category with this slug already exists", ErrorCode.SLUG_EXISTS));
     } else {
       next(err);
     }
@@ -104,12 +101,11 @@ export const remove = async (
   next: NextFunction
 ) => {
   try {
-    const category = await CategoryService.deleteCategory(req.params.id);
-    if (!category) throw new AppError("Category not found", 404);
+    await CategoryService.deleteCategory(req.params.id);
     res.status(204).send();
   } catch (err: any) {
     if (err.message === "Cannot delete category with subcategories") {
-      next(new AppError(err.message, 400));
+      next(new AppError(err.message, ErrorCode.BUSINESS_ERROR));
     } else {
       next(err);
     }

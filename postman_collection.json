@@ -1,0 +1,1134 @@
+{
+  "info": {
+    "_postman_id": "dg-shopping-cart-api",
+    "name": "DG Shopping Cart API",
+    "description": "API collection for the DG Shopping Cart application",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000/api",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Authentication endpoints",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"name\": \"John Doe\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register a new user account"
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.accessToken) {",
+                  "    pm.collectionVariables.set('accessToken', jsonData.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login with email and password. Access token is automatically saved to collection variables."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "Logout and clear refresh token cookie"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Get the currently authenticated user's information"
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.accessToken) {",
+                  "    pm.collectionVariables.set('accessToken', jsonData.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh"]
+            },
+            "description": "Refresh the access token using the refresh token from cookie"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "description": "Product management endpoints",
+      "item": [
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Items per page"
+                },
+                {
+                  "key": "q",
+                  "value": "",
+                  "description": "Search query",
+                  "disabled": true
+                },
+                {
+                  "key": "category",
+                  "value": "",
+                  "description": "Filter by category",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get paginated list of products with optional search and category filter"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "product_id_here",
+                  "description": "Product ID"
+                }
+              ]
+            },
+            "description": "Get a single product by its ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Product (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"New Product\",\n  \"description\": \"This is a detailed product description with at least 10 characters\",\n  \"price\": 29.99,\n  \"stock\": 100,\n  \"images\": [\"https://example.com/image1.jpg\"],\n  \"category\": \"category_id_here\",\n  \"specs\": {\n    \"color\": \"Blue\",\n    \"size\": \"Medium\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"]
+            },
+            "description": "Create a new product (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Product (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Product Title\",\n  \"price\": 39.99,\n  \"stock\": 50\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "product_id_here",
+                  "description": "Product ID"
+                }
+              ]
+            },
+            "description": "Update an existing product (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Product (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "product_id_here",
+                  "description": "Product ID"
+                }
+              ]
+            },
+            "description": "Delete a product (Admin only)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "description": "Category management endpoints",
+      "item": [
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categories?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Items per page"
+                },
+                {
+                  "key": "parent",
+                  "value": "",
+                  "description": "Filter by parent category ID",
+                  "disabled": true
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "description": "Filter by active status",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get paginated list of categories"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Category Tree",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categories/tree",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", "tree"]
+            },
+            "description": "Get nested category tree structure"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Category by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categories/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "category_id_here",
+                  "description": "Category ID"
+                }
+              ]
+            },
+            "description": "Get a single category by its ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Category by Slug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categories/slug/:slug",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", "slug", ":slug"],
+              "variable": [
+                {
+                  "key": "slug",
+                  "value": "electronics",
+                  "description": "Category slug"
+                }
+              ]
+            },
+            "description": "Get a category by its slug"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Subcategories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categories/:id/subcategories",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", ":id", "subcategories"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "category_id_here",
+                  "description": "Parent category ID"
+                }
+              ]
+            },
+            "description": "Get all subcategories of a category"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Category (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Category\",\n  \"slug\": \"new-category\",\n  \"description\": \"Category description\",\n  \"image\": \"https://example.com/category.jpg\",\n  \"parent\": null,\n  \"active\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories"]
+            },
+            "description": "Create a new category (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Category (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Category Name\",\n  \"active\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/categories/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "category_id_here",
+                  "description": "Category ID"
+                }
+              ]
+            },
+            "description": "Update an existing category (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Category (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/categories/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "category_id_here",
+                  "description": "Category ID"
+                }
+              ]
+            },
+            "description": "Delete a category (Admin only)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "description": "Shopping cart endpoints (requires authentication)",
+      "item": [
+        {
+          "name": "Get Cart",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cart",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart"]
+            },
+            "description": "Get the current user's shopping cart"
+          },
+          "response": []
+        },
+        {
+          "name": "Add to Cart",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"product_id_here\",\n  \"quantity\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cart/add",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "add"]
+            },
+            "description": "Add a product to the cart"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Cart Item",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cart/item/:productId",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "item", ":productId"],
+              "variable": [
+                {
+                  "key": "productId",
+                  "value": "product_id_here",
+                  "description": "Product ID"
+                }
+              ]
+            },
+            "description": "Update the quantity of a cart item"
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Cart Item",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cart/item/:productId",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "item", ":productId"],
+              "variable": [
+                {
+                  "key": "productId",
+                  "value": "product_id_here",
+                  "description": "Product ID"
+                }
+              ]
+            },
+            "description": "Remove an item from the cart"
+          },
+          "response": []
+        },
+        {
+          "name": "Clear Cart",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cart/clear",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "clear"]
+            },
+            "description": "Clear all items from the cart"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "description": "Order management endpoints (requires authentication)",
+      "item": [
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shippingAddress\": {\n    \"fullName\": \"John Doe\",\n    \"address\": \"123 Main Street\",\n    \"city\": \"New York\",\n    \"postalCode\": \"10001\",\n    \"country\": \"USA\",\n    \"phone\": \"+1234567890\"\n  },\n  \"paymentMethod\": \"card\",\n  \"notes\": \"Please leave at the door\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders"]
+            },
+            "description": "Create a new order from the current cart"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Items per page"
+                }
+              ]
+            },
+            "description": "Get paginated list of user's orders"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "order_id_here",
+                  "description": "Order ID"
+                }
+              ]
+            },
+            "description": "Get a single order by its ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order by Number",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/number/:orderNumber",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "number", ":orderNumber"],
+              "variable": [
+                {
+                  "key": "orderNumber",
+                  "value": "ORD-123456",
+                  "description": "Order number"
+                }
+              ]
+            },
+            "description": "Get an order by its order number"
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/:id/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", ":id", "cancel"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "order_id_here",
+                  "description": "Order ID"
+                }
+              ]
+            },
+            "description": "Cancel an order"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin - Orders",
+      "description": "Admin order management endpoints",
+      "item": [
+        {
+          "name": "Get All Orders (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/admin/all?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "admin", "all"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Items per page"
+                },
+                {
+                  "key": "status",
+                  "value": "pending",
+                  "description": "Filter by status",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get all orders with pagination and optional status filter (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order Status (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"shipped\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders/admin/:id/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "admin", ":id", "status"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "order_id_here",
+                  "description": "Order ID"
+                }
+              ]
+            },
+            "description": "Update order status. Valid statuses: pending, confirmed, processing, shipped, delivered, cancelled"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Payment Status (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"paid\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders/admin/:id/payment",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "admin", ":id", "payment"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "order_id_here",
+                  "description": "Order ID"
+                }
+              ]
+            },
+            "description": "Update payment status. Valid statuses: pending, paid, failed, refunded"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin - Users",
+      "description": "Admin user management endpoints",
+      "item": [
+        {
+          "name": "Get All Users (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Items per page"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search by name or email",
+                  "disabled": true
+                },
+                {
+                  "key": "role",
+                  "value": "customer",
+                  "description": "Filter by role",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get all users with pagination and optional filters (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Stats (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "stats"]
+            },
+            "description": "Get user statistics including total, admins, customers count and recent users (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "user_id_here",
+                  "description": "User ID"
+                }
+              ]
+            },
+            "description": "Get a single user by ID (Admin only)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Upload",
+      "description": "File upload endpoints (Admin only)",
+      "item": [
+        {
+          "name": "Get Presigned URL",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filename\": \"product-image.jpg\",\n  \"folder\": \"products\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/upload/presigned-url",
+              "host": ["{{baseUrl}}"],
+              "path": ["upload", "presigned-url"]
+            },
+            "description": "Get a presigned URL for direct S3 upload. Allowed folders: products, categories, uploads"
+          },
+          "response": []
+        },
+        {
+          "name": "Upload File",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "description": "File to upload (max 5MB, allowed: jpg, jpeg, png, gif, webp, svg)"
+                },
+                {
+                  "key": "folder",
+                  "value": "products",
+                  "type": "text",
+                  "description": "Target folder (products, categories, uploads)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["upload"]
+            },
+            "description": "Upload a file through the backend to S3"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete File",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://s3.amazonaws.com/bucket/products/image.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["upload"]
+            },
+            "description": "Delete a single file from S3. Provide either url or key."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Multiple Files",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"urls\": [\n    \"https://s3.amazonaws.com/bucket/products/image1.jpg\",\n    \"https://s3.amazonaws.com/bucket/products/image2.jpg\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/upload/bulk",
+              "host": ["{{baseUrl}}"],
+              "path": ["upload", "bulk"]
+            },
+            "description": "Delete multiple files from S3. Provide either urls or keys array."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "description": "Health check endpoint",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Check if the API is running"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

@@ -7,6 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
+import ThemeToggle from "./ThemeToggle";
 
 const navItems = [
   { id: 1, name: "Home", link: "/" },
@@ -85,7 +86,7 @@ export default function Navbar() {
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
           isScrolled
-            ? "bg-white/80 backdrop-blur-xl shadow-lg shadow-slate-900/5 border-b border-slate-200/50"
+            ? "bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-lg shadow-slate-900/5 dark:shadow-slate-950/20 border-b border-slate-200/50 dark:border-slate-700/50"
             : "bg-slate-900/90 backdrop-blur-md"
         }`}
       >
@@ -114,10 +115,10 @@ export default function Navbar() {
                   className={`relative px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
                     isActiveLink(item.link)
                       ? isScrolled
-                        ? "text-cyan-600"
+                        ? "text-cyan-600 dark:text-cyan-400"
                         : "text-white"
                       : isScrolled
-                      ? "text-slate-600 hover:text-cyan-600"
+                      ? "text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400"
                       : "text-white/70 hover:text-white"
                   }`}
                 >
@@ -125,7 +126,7 @@ export default function Navbar() {
                   {isActiveLink(item.link) && (
                     <span
                       className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${
-                        isScrolled ? "bg-cyan-600" : "bg-white"
+                        isScrolled ? "bg-cyan-600 dark:bg-cyan-400" : "bg-white"
                       }`}
                     />
                   )}
@@ -135,14 +136,17 @@ export default function Navbar() {
 
             {/* Right Section */}
             <div className="flex items-center gap-1 sm:gap-2">
+              {/* Theme Toggle */}
+              <ThemeToggle isScrolled={isScrolled} />
+
               {/* Search Button */}
               <button
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
                 className={`relative p-2.5 rounded-xl transition-all duration-300 ${
                   isSearchOpen
-                    ? "bg-cyan-50 text-cyan-600"
+                    ? "bg-cyan-50 dark:bg-cyan-900/50 text-cyan-600 dark:text-cyan-400"
                     : isScrolled
-                    ? "text-slate-500 hover:text-cyan-600 hover:bg-slate-100"
+                    ? "text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                     : "text-white/70 hover:text-white hover:bg-white/10"
                 }`}
                 aria-label="Search"
@@ -167,9 +171,9 @@ export default function Navbar() {
                 href="/cart"
                 className={`relative p-2.5 rounded-xl transition-all duration-300 group ${
                   pathname === "/cart"
-                    ? "bg-cyan-50 text-cyan-600"
+                    ? "bg-cyan-50 dark:bg-cyan-900/50 text-cyan-600 dark:text-cyan-400"
                     : isScrolled
-                    ? "text-slate-500 hover:text-cyan-600 hover:bg-slate-100"
+                    ? "text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                     : "text-white/70 hover:text-white hover:bg-white/10"
                 }`}
                 aria-label="Cart"
@@ -201,9 +205,9 @@ export default function Navbar() {
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                     className={`flex items-center gap-2 p-1.5 sm:pr-3 rounded-xl transition-all duration-300 ${
                       isUserMenuOpen
-                        ? "bg-slate-100"
+                        ? "bg-slate-100 dark:bg-slate-800"
                         : isScrolled
-                        ? "hover:bg-slate-100"
+                        ? "hover:bg-slate-100 dark:hover:bg-slate-800"
                         : "hover:bg-white/10"
                     }`}
                   >
@@ -220,7 +224,7 @@ export default function Navbar() {
                     <svg
                       className={`hidden sm:block w-4 h-4 transition-transform duration-300 ${
                         isUserMenuOpen ? "rotate-180" : ""
-                      } ${isScrolled ? "text-slate-400" : "text-white/60"}`}
+                      } ${isScrolled ? "text-slate-400 dark:text-slate-500" : "text-white/60"}`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -236,14 +240,14 @@ export default function Navbar() {
 
                   {/* User Dropdown */}
                   <div
-                    className={`absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl shadow-slate-900/10 border border-slate-100 overflow-hidden transition-all duration-300 origin-top-right ${
+                    className={`absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-900/10 dark:shadow-slate-950/20 border border-slate-100 dark:border-slate-700 overflow-hidden transition-all duration-300 origin-top-right ${
                       isUserMenuOpen
                         ? "opacity-100 scale-100 translate-y-0"
                         : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
                     }`}
                   >
                     {/* User Info */}
-                    <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100/50">
+                    <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100/50 dark:from-slate-700 dark:to-slate-800">
                       <div className="flex items-center gap-3">
                         <div className="relative">
                           <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-cyan-500/25">
@@ -258,10 +262,10 @@ export default function Navbar() {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-slate-900 truncate">
+                          <p className="font-semibold text-slate-900 dark:text-slate-100 truncate">
                             {user?.name || "User"}
                           </p>
-                          <p className="text-sm text-slate-500 truncate">
+                          <p className="text-sm text-slate-500 dark:text-slate-400 truncate">
                             {user?.email}
                           </p>
                         </div>
@@ -275,12 +279,12 @@ export default function Navbar() {
                         onClick={() => setIsUserMenuOpen(false)}
                         className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${
                           pathname === "/dashboard"
-                            ? "bg-cyan-50 text-cyan-700"
-                            : "text-slate-600 hover:bg-slate-50"
+                            ? "bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400"
+                            : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
                         }`}
                       >
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                          pathname === "/dashboard" ? "bg-cyan-100" : "bg-slate-100"
+                          pathname === "/dashboard" ? "bg-cyan-100 dark:bg-cyan-900/50" : "bg-slate-100 dark:bg-slate-700"
                         }`}>
                           <svg
                             className="w-4 h-4"
@@ -304,12 +308,12 @@ export default function Navbar() {
                         onClick={() => setIsUserMenuOpen(false)}
                         className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${
                           pathname === "/dashboard/orders"
-                            ? "bg-cyan-50 text-cyan-700"
-                            : "text-slate-600 hover:bg-slate-50"
+                            ? "bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400"
+                            : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
                         }`}
                       >
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                          pathname === "/dashboard/orders" ? "bg-cyan-100" : "bg-slate-100"
+                          pathname === "/dashboard/orders" ? "bg-cyan-100 dark:bg-cyan-900/50" : "bg-slate-100 dark:bg-slate-700"
                         }`}>
                           <svg
                             className="w-4 h-4"
@@ -333,12 +337,12 @@ export default function Navbar() {
                         onClick={() => setIsUserMenuOpen(false)}
                         className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${
                           pathname === "/dashboard/settings"
-                            ? "bg-cyan-50 text-cyan-700"
-                            : "text-slate-600 hover:bg-slate-50"
+                            ? "bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400"
+                            : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
                         }`}
                       >
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                          pathname === "/dashboard/settings" ? "bg-cyan-100" : "bg-slate-100"
+                          pathname === "/dashboard/settings" ? "bg-cyan-100 dark:bg-cyan-900/50" : "bg-slate-100 dark:bg-slate-700"
                         }`}>
                           <svg
                             className="w-4 h-4"
@@ -365,18 +369,18 @@ export default function Navbar() {
 
                       {user?.role === "admin" && (
                         <>
-                          <div className="my-2 border-t border-slate-100" />
+                          <div className="my-2 border-t border-slate-100 dark:border-slate-700" />
                           <Link
                             href="/admin"
                             onClick={() => setIsUserMenuOpen(false)}
                             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${
                               pathname.startsWith("/admin")
-                                ? "bg-amber-50 text-amber-700"
-                                : "text-slate-600 hover:bg-slate-50"
+                                ? "bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
+                                : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
                             }`}
                           >
                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                              pathname.startsWith("/admin") ? "bg-amber-100" : "bg-amber-50"
+                              pathname.startsWith("/admin") ? "bg-amber-100 dark:bg-amber-900/50" : "bg-amber-50 dark:bg-amber-900/30"
                             }`}>
                               <svg
                                 className="w-4 h-4 text-amber-600"
@@ -399,12 +403,12 @@ export default function Navbar() {
                     </div>
 
                     {/* Logout */}
-                    <div className="p-2 border-t border-slate-100">
+                    <div className="p-2 border-t border-slate-100 dark:border-slate-700">
                       <button
                         onClick={handleLogout}
-                        className="flex items-center gap-3 w-full px-3 py-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                        className="flex items-center gap-3 w-full px-3 py-2.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-colors"
                       >
-                        <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center">
+                        <div className="w-8 h-8 bg-red-50 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
                           <svg
                             className="w-4 h-4"
                             fill="none"
@@ -451,7 +455,7 @@ export default function Navbar() {
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className={`lg:hidden p-2.5 rounded-xl transition-all duration-300 ${
                   isScrolled
-                    ? "text-slate-600 hover:bg-slate-100"
+                    ? "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                     : "text-white hover:bg-white/10"
                 }`}
                 aria-label="Menu"
@@ -459,17 +463,17 @@ export default function Navbar() {
                 <div className="w-5 h-5 flex flex-col justify-center items-center gap-1.5">
                   <span
                     className={`w-5 h-0.5 rounded-full transition-all duration-300 ${
-                      isScrolled ? "bg-slate-600" : "bg-white"
+                      isScrolled ? "bg-slate-600 dark:bg-slate-300" : "bg-white"
                     } ${isMobileMenuOpen ? "rotate-45 translate-y-2" : ""}`}
                   />
                   <span
                     className={`w-5 h-0.5 rounded-full transition-all duration-300 ${
-                      isScrolled ? "bg-slate-600" : "bg-white"
+                      isScrolled ? "bg-slate-600 dark:bg-slate-300" : "bg-white"
                     } ${isMobileMenuOpen ? "opacity-0" : ""}`}
                   />
                   <span
                     className={`w-5 h-0.5 rounded-full transition-all duration-300 ${
-                      isScrolled ? "bg-slate-600" : "bg-white"
+                      isScrolled ? "bg-slate-600 dark:bg-slate-300" : "bg-white"
                     } ${isMobileMenuOpen ? "-rotate-45 -translate-y-2" : ""}`}
                   />
                 </div>
@@ -492,7 +496,7 @@ export default function Navbar() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search for products..."
-                className="w-full px-5 py-3.5 pl-12 pr-24 bg-white border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 shadow-lg shadow-slate-900/5 transition-all"
+                className="w-full px-5 py-3.5 pl-12 pr-24 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/10 dark:focus:ring-cyan-400/10 shadow-lg shadow-slate-900/5 dark:shadow-slate-950/20 transition-all"
               />
               <svg
                 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"
@@ -532,14 +536,14 @@ export default function Navbar() {
 
       {/* Mobile Menu Panel */}
       <div
-        className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white z-50 lg:hidden transform transition-transform duration-500 ease-out shadow-2xl ${
+        className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white dark:bg-slate-900 z-50 lg:hidden transform transition-transform duration-500 ease-out shadow-2xl ${
           isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Mobile Menu Header */}
-          <div className="flex items-center justify-between p-4 border-b border-slate-100">
-            <div className="bg-white rounded-xl p-1.5 shadow-sm border border-slate-100">
+          <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
+            <div className="bg-white dark:bg-slate-800 rounded-xl p-1.5 shadow-sm border border-slate-100 dark:border-slate-700">
               <Image
                 src="/logo.jpg"
                 height={40}
@@ -550,7 +554,7 @@ export default function Navbar() {
             </div>
             <button
               onClick={() => setIsMobileMenuOpen(false)}
-              className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
+              className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
               aria-label="Close menu"
             >
               <svg
@@ -579,21 +583,24 @@ export default function Navbar() {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-medium transition-all duration-200 ${
                     isActiveLink(item.link)
-                      ? "bg-cyan-50 text-cyan-700"
-                      : "text-slate-700 hover:bg-slate-50"
+                      ? "bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400"
+                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                   }`}
                 >
                   {isActiveLink(item.link) && (
-                    <span className="w-1.5 h-1.5 bg-cyan-600 rounded-full" />
+                    <span className="w-1.5 h-1.5 bg-cyan-600 dark:bg-cyan-400 rounded-full" />
                   )}
                   {item.name}
                 </Link>
               ))}
+
+              {/* Theme Toggle in Mobile Menu */}
+              <ThemeToggle variant="mobile" />
             </div>
 
             {isAuthenticated && (
-              <div className="mt-6 pt-6 border-t border-slate-100 px-4">
-                <p className="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+              <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 px-4">
+                <p className="px-4 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
                   Account
                 </p>
                 <div className="space-y-1">
@@ -602,12 +609,12 @@ export default function Navbar() {
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
                       pathname === "/dashboard"
-                        ? "bg-cyan-50 text-cyan-700"
-                        : "text-slate-700 hover:bg-slate-50"
+                        ? "bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400"
+                        : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                     }`}
                   >
                     <svg
-                      className="w-5 h-5 text-slate-400"
+                      className="w-5 h-5 text-slate-400 dark:text-slate-500"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -626,12 +633,12 @@ export default function Navbar() {
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
                       pathname === "/dashboard/orders"
-                        ? "bg-cyan-50 text-cyan-700"
-                        : "text-slate-700 hover:bg-slate-50"
+                        ? "bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400"
+                        : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                     }`}
                   >
                     <svg
-                      className="w-5 h-5 text-slate-400"
+                      className="w-5 h-5 text-slate-400 dark:text-slate-500"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -651,8 +658,8 @@ export default function Navbar() {
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
                         pathname.startsWith("/admin")
-                          ? "bg-amber-50 text-amber-700"
-                          : "text-slate-700 hover:bg-slate-50"
+                          ? "bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
+                          : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                       }`}
                     >
                       <svg
@@ -677,7 +684,7 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Menu Footer */}
-          <div className="p-4 border-t border-slate-100 bg-slate-50/50">
+          <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
             {isAuthenticated ? (
               <div className="space-y-3">
                 <div className="flex items-center gap-3 px-2">
@@ -687,17 +694,17 @@ export default function Navbar() {
                       "U"}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-900 truncate text-sm">
+                    <p className="font-semibold text-slate-900 dark:text-slate-100 truncate text-sm">
                       {user?.name || "User"}
                     </p>
-                    <p className="text-xs text-slate-500 truncate">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
                       {user?.email}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center justify-center gap-2 w-full px-4 py-3 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl font-semibold transition-colors"
+                  className="flex items-center justify-center gap-2 w-full px-4 py-3 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-xl font-semibold transition-colors"
                 >
                   <svg
                     className="w-5 h-5"

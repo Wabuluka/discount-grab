@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { AppError } from "../middleware/errorHandler";
+import { AppError, ErrorCode } from "../middleware/errorHandler";
 import * as UploadService from "../service/upload.service";
 
 // Generate presigned URL for direct upload
@@ -12,7 +12,7 @@ export const getPresignedUrl = async (
     const { filename, folder } = req.body;
 
     if (!filename) {
-      throw new AppError("Filename is required", 400);
+      throw new AppError("Filename is required", ErrorCode.MISSING_FIELD);
     }
 
     // Validate file extension
@@ -21,7 +21,7 @@ export const getPresignedUrl = async (
     if (!ext || !allowedExtensions.includes(ext)) {
       throw new AppError(
         `Invalid file type. Allowed: ${allowedExtensions.join(", ")}`,
-        400
+        ErrorCode.INVALID_FORMAT
       );
     }
 
@@ -44,7 +44,7 @@ export const uploadFile = async (
 ) => {
   try {
     if (!req.file) {
-      throw new AppError("No file uploaded", 400);
+      throw new AppError("No file uploaded", ErrorCode.MISSING_FIELD);
     }
 
     const folder = (req.body.folder as string) || "uploads";
@@ -81,7 +81,7 @@ export const deleteFile = async (
     }
 
     if (!targetKey) {
-      throw new AppError("File key or URL is required", 400);
+      throw new AppError("File key or URL is required", ErrorCode.MISSING_FIELD);
     }
 
     await UploadService.deleteFromS3(targetKey);
@@ -101,7 +101,7 @@ export const deleteMultipleFiles = async (
     const { urls, keys } = req.body;
 
     if (!urls && !keys) {
-      throw new AppError("Either urls or keys array is required", 400);
+      throw new AppError("Either urls or keys array is required", ErrorCode.MISSING_FIELD);
     }
 
     let result: { success: string[]; failed: string[] };
@@ -111,7 +111,7 @@ export const deleteMultipleFiles = async (
     } else if (keys && Array.isArray(keys) && keys.length > 0) {
       result = await UploadService.deleteMultipleFromS3(keys);
     } else {
-      throw new AppError("No valid urls or keys provided", 400);
+      throw new AppError("No valid urls or keys provided", ErrorCode.INVALID_INPUT);
     }
 
     res.json({

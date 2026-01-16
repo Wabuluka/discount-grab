@@ -57,7 +57,7 @@ export default function AdminProductsPage() {
     setCategoriesLoading(true);
     try {
       const response = await categoryApi.getCategories({ active: true });
-      setCategories(response.data.docs);
+      setCategories(response.data.categories);
     } catch (err) {
       console.error("Failed to fetch categories:", err);
     } finally {

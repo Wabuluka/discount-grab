@@ -117,17 +117,17 @@ export default function Collections() {
 
   if (loading) {
     return (
-      <section className="py-20 md:py-28 bg-slate-50">
+      <section className="py-20 md:py-28 bg-slate-50 dark:bg-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <div className="h-10 w-56 bg-slate-200 rounded-xl animate-pulse mx-auto mb-4" />
-            <div className="h-5 w-80 bg-slate-100 rounded-lg animate-pulse mx-auto" />
+            <div className="h-10 w-56 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse mx-auto mb-4" />
+            <div className="h-5 w-80 bg-slate-100 dark:bg-slate-600 rounded-lg animate-pulse mx-auto" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
-                className="aspect-[4/3] bg-slate-200 rounded-3xl animate-pulse"
+                className="aspect-[4/3] bg-slate-200 dark:bg-slate-700 rounded-3xl animate-pulse"
               />
             ))}
           </div>
@@ -141,17 +141,17 @@ export default function Collections() {
   }
 
   return (
-    <section className="py-20 md:py-28 bg-slate-50 relative overflow-hidden">
+    <section className="py-20 md:py-28 bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-cyan-100 to-blue-100 rounded-full blur-3xl opacity-50" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-br from-violet-100 to-purple-100 rounded-full blur-3xl opacity-50" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-cyan-100 to-blue-100 dark:from-cyan-900/30 dark:to-blue-900/30 rounded-full blur-3xl opacity-50" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-br from-violet-100 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30 rounded-full blur-3xl opacity-50" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Section Header */}
         <div className="text-center mb-14 md:mb-18">
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-full mb-6 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-full mb-6 shadow-sm">
             <svg
               className="w-4 h-4 text-cyan-500"
               fill="none"
@@ -167,13 +167,13 @@ export default function Collections() {
             </svg>
             Shop by Category
           </div>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 mb-5 tracking-tight">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-100 mb-5 tracking-tight">
             Explore Our{" "}
             <span className="bg-gradient-to-r from-cyan-600 via-blue-600 to-violet-600 bg-clip-text text-transparent">
               Collections
             </span>
           </h2>
-          <p className="text-slate-500 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+          <p className="text-slate-500 dark:text-slate-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
             Discover premium products across our carefully curated categories
           </p>
         </div>
@@ -189,7 +189,7 @@ export default function Collections() {
               <Link
                 key={category._id}
                 href={`/shop?category=${category._id}`}
-                className={`group relative rounded-3xl overflow-hidden bg-white shadow-lg hover:shadow-2xl ${colorTheme.glow} transition-all duration-500 hover:-translate-y-1`}
+                className={`group relative rounded-3xl overflow-hidden bg-white dark:bg-slate-700 shadow-lg hover:shadow-2xl ${colorTheme.glow} transition-all duration-500 hover:-translate-y-1`}
               >
                 {/* Image Container */}
                 <div className="relative aspect-[4/3] overflow-hidden">
@@ -256,7 +256,7 @@ export default function Collections() {
         <div className="text-center mt-14">
           <Link
             href="/shop"
-            className="group inline-flex items-center gap-3 px-8 py-4 bg-slate-900 text-white font-semibold rounded-2xl hover:bg-slate-800 transition-all duration-300 shadow-xl shadow-slate-900/10 hover:shadow-2xl hover:shadow-slate-900/20"
+            className="group inline-flex items-center gap-3 px-8 py-4 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-semibold rounded-2xl hover:bg-slate-800 dark:hover:bg-white transition-all duration-300 shadow-xl shadow-slate-900/10 hover:shadow-2xl hover:shadow-slate-900/20"
           >
             <span>View All Categories</span>
             <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center group-hover:bg-white/20 transition-colors">

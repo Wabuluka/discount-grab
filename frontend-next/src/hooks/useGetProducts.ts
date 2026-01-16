@@ -2,9 +2,13 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { productApi } from "@/services/productApi";
+import type { Product } from "@/types/product";
 
 type ResponseData = {
-  docs: [];
+  products: Product[];
+  total: number;
+  page: number;
+  limit: number;
 };
 
 const getProducts = async () => {

@@ -17,18 +17,59 @@ import logger from "./utils/logger";
 
 const app = express();
 
+// Global unhandled exception handler
+process.on("uncaughtException", (error: Error) => {
+  logger.error("Uncaught Exception - Shutting down...", {
+    type: "uncaught_exception",
+    name: error.name,
+    message: error.message,
+    stack: error.stack,
+  });
+  process.exit(1);
+});
+
+// Global unhandled promise rejection handler
+process.on("unhandledRejection", (reason: unknown) => {
+  logger.error("Unhandled Promise Rejection", {
+    type: "unhandled_rejection",
+    reason: reason instanceof Error ? reason.message : String(reason),
+    stack: reason instanceof Error ? reason.stack : undefined,
+  });
+});
+
+// SIGTERM handler for graceful shutdown
+process.on("SIGTERM", () => {
+  logger.info("SIGTERM received - Graceful shutdown initiated");
+  mongoose.connection.close().then(() => {
+    logger.info("MongoDB connection closed");
+    process.exit(0);
+  });
+});
+
+// SIGINT handler for graceful shutdown (Ctrl+C)
+process.on("SIGINT", () => {
+  logger.info("SIGINT received - Graceful shutdown initiated");
+  mongoose.connection.close().then(() => {
+    logger.info("MongoDB connection closed");
+    process.exit(0);
+  });
+});
+
 app.use(helmet());
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// HTTP request logging with Morgan
 app.use(
   morgan("combined", { stream: { write: (s) => logger.info(s.trim()) } })
 );
 
-app.get("health", (_, res) => res.json({ status: "ok" }));
+// Health check endpoint
+app.get("/health", (_, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));
 
+// API routes
 app.use("/api/products", productRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/cart", cartRouter);
@@ -37,18 +78,58 @@ app.use("/api/categories", categoryRouter);
 app.use("/api/upload", uploadRouter);
 app.use("/api/users", userRouter);
 
+// Error handling
 app.use(notFound);
 app.use(errorHandler);
 
+// Database connection and server start
 mongoose
   .connect(config.mongoUri)
   .then(() => {
-    logger.info("Connected to MongoDB");
+    logger.info("Connected to MongoDB", {
+      type: "database",
+      operation: "connect",
+      database: "mongodb",
+    });
     app.listen(config.port, () => {
-      logger.info(`Server listening on port: ${config.port}`);
+      logger.info(`Server listening on port: ${config.port}`, {
+        type: "server",
+        port: config.port,
+        environment: process.env.NODE_ENV || "development",
+      });
     });
   })
   .catch((err) => {
-    logger.error("Failed to connect to MongoDB: " + err);
+    logger.error("Failed to connect to MongoDB", {
+      type: "database",
+      operation: "connect",
+      error: err.message,
+      stack: err.stack,
+    });
     process.exit(1);
   });
+
+// MongoDB connection event listeners
+mongoose.connection.on("error", (err) => {
+  logger.error("MongoDB connection error", {
+    type: "database",
+    operation: "connection_error",
+    error: err.message,
+  });
+});
+
+mongoose.connection.on("disconnected", () => {
+  logger.warn("MongoDB disconnected", {
+    type: "database",
+    operation: "disconnected",
+  });
+});
+
+mongoose.connection.on("reconnected", () => {
+  logger.info("MongoDB reconnected", {
+    type: "database",
+    operation: "reconnected",
+  });
+});
+
+export default app;

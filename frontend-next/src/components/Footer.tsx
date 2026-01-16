@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const footerLinks = {
   shop: [
@@ -79,16 +80,16 @@ const paymentMethods = [
 
 export default function Footer() {
   return (
-    <footer className="bg-slate-900 text-white">
+    <footer className="bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white">
       {/* Newsletter Section */}
-      <div className="border-b border-slate-800">
+      <div className="border-b border-slate-200 dark:border-slate-800">
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
             <div className="text-center lg:text-left">
               <h3 className="text-2xl font-bold mb-2">
                 Subscribe to Our Newsletter
               </h3>
-              <p className="text-slate-400">
+              <p className="text-slate-500 dark:text-slate-400">
                 Get the latest deals, new arrivals, and exclusive offers
                 straight to your inbox.
               </p>
@@ -97,7 +98,7 @@ export default function Footer() {
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="px-5 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 w-full sm:w-80"
+                className="px-5 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 w-full sm:w-80"
               />
               <button className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 whitespace-nowrap">
                 Subscribe
@@ -113,11 +114,15 @@ export default function Footer() {
           {/* Brand Column */}
           <div className="col-span-2 md:col-span-3 lg:col-span-2">
             <Link href="/" className="inline-block mb-6">
-              <span className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                Discount Grab
-              </span>
+              <Image
+                src="/logo.jpg"
+                width={150}
+                height={50}
+                alt="Discount Grab Logo"
+                className="object-contain"
+              />
             </Link>
-            <p className="text-slate-400 mb-6 leading-relaxed">
+            <p className="text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
               Your trusted destination for premium electronics at unbeatable
               prices. Quality products, exceptional service, and fast delivery
               guaranteed.
@@ -129,7 +134,7 @@ export default function Footer() {
                 <a
                   key={social.name}
                   href={social.href}
-                  className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 hover:bg-cyan-500 hover:text-white transition-all duration-300"
+                  className="w-10 h-10 bg-slate-200 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-cyan-500 hover:text-white transition-all duration-300"
                   aria-label={social.name}
                 >
                   {social.icon}
@@ -140,13 +145,13 @@ export default function Footer() {
 
           {/* Shop Links */}
           <div>
-            <h4 className="text-white font-semibold mb-4">Shop</h4>
+            <h4 className="text-slate-900 dark:text-white font-semibold mb-4">Shop</h4>
             <ul className="space-y-3">
               {footerLinks.shop.map((link) => (
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-slate-400 hover:text-cyan-400 transition-colors duration-200"
+                    className="text-slate-500 dark:text-slate-400 hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors duration-200"
                   >
                     {link.label}
                   </Link>
@@ -157,13 +162,13 @@ export default function Footer() {
 
           {/* Categories Links */}
           <div>
-            <h4 className="text-white font-semibold mb-4">Categories</h4>
+            <h4 className="text-slate-900 dark:text-white font-semibold mb-4">Categories</h4>
             <ul className="space-y-3">
               {footerLinks.categories.map((link) => (
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-slate-400 hover:text-cyan-400 transition-colors duration-200"
+                    className="text-slate-500 dark:text-slate-400 hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors duration-200"
                   >
                     {link.label}
                   </Link>
@@ -174,13 +179,13 @@ export default function Footer() {
 
           {/* Support Links */}
           <div>
-            <h4 className="text-white font-semibold mb-4">Support</h4>
+            <h4 className="text-slate-900 dark:text-white font-semibold mb-4">Support</h4>
             <ul className="space-y-3">
               {footerLinks.support.map((link) => (
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-slate-400 hover:text-cyan-400 transition-colors duration-200"
+                    className="text-slate-500 dark:text-slate-400 hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors duration-200"
                   >
                     {link.label}
                   </Link>
@@ -191,13 +196,13 @@ export default function Footer() {
 
           {/* Company Links */}
           <div>
-            <h4 className="text-white font-semibold mb-4">Company</h4>
+            <h4 className="text-slate-900 dark:text-white font-semibold mb-4">Company</h4>
             <ul className="space-y-3">
               {footerLinks.company.map((link) => (
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-slate-400 hover:text-cyan-400 transition-colors duration-200"
+                    className="text-slate-500 dark:text-slate-400 hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors duration-200"
                   >
                     {link.label}
                   </Link>
@@ -208,11 +213,11 @@ export default function Footer() {
         </div>
 
         {/* Features Bar */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 pt-12 border-t border-slate-800">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 pt-12 border-t border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 bg-slate-200 dark:bg-slate-800 rounded-xl flex items-center justify-center shrink-0">
               <svg
-                className="w-6 h-6 text-cyan-400"
+                className="w-6 h-6 text-cyan-500 dark:text-cyan-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -226,15 +231,15 @@ export default function Footer() {
               </svg>
             </div>
             <div>
-              <p className="text-white font-semibold text-sm">Free Shipping</p>
+              <p className="text-slate-900 dark:text-white font-semibold text-sm">Free Shipping</p>
               <p className="text-slate-500 text-xs">On orders over $50</p>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 bg-slate-200 dark:bg-slate-800 rounded-xl flex items-center justify-center shrink-0">
               <svg
-                className="w-6 h-6 text-cyan-400"
+                className="w-6 h-6 text-cyan-500 dark:text-cyan-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -248,15 +253,15 @@ export default function Footer() {
               </svg>
             </div>
             <div>
-              <p className="text-white font-semibold text-sm">Secure Payment</p>
+              <p className="text-slate-900 dark:text-white font-semibold text-sm">Secure Payment</p>
               <p className="text-slate-500 text-xs">100% secure checkout</p>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 bg-slate-200 dark:bg-slate-800 rounded-xl flex items-center justify-center shrink-0">
               <svg
-                className="w-6 h-6 text-cyan-400"
+                className="w-6 h-6 text-cyan-500 dark:text-cyan-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -270,15 +275,15 @@ export default function Footer() {
               </svg>
             </div>
             <div>
-              <p className="text-white font-semibold text-sm">Easy Returns</p>
+              <p className="text-slate-900 dark:text-white font-semibold text-sm">Easy Returns</p>
               <p className="text-slate-500 text-xs">30-day return policy</p>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 bg-slate-200 dark:bg-slate-800 rounded-xl flex items-center justify-center shrink-0">
               <svg
-                className="w-6 h-6 text-cyan-400"
+                className="w-6 h-6 text-cyan-500 dark:text-cyan-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -292,7 +297,7 @@ export default function Footer() {
               </svg>
             </div>
             <div>
-              <p className="text-white font-semibold text-sm">24/7 Support</p>
+              <p className="text-slate-900 dark:text-white font-semibold text-sm">24/7 Support</p>
               <p className="text-slate-500 text-xs">Dedicated support team</p>
             </div>
           </div>
@@ -300,7 +305,7 @@ export default function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-slate-800">
+      <div className="border-t border-slate-200 dark:border-slate-800">
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-slate-500 text-sm text-center md:text-left">
@@ -312,23 +317,23 @@ export default function Footer() {
             <div className="flex items-center gap-3">
               <span className="text-slate-500 text-sm">We accept:</span>
               <div className="flex items-center gap-2">
-                <div className="px-3 py-1.5 bg-slate-800 rounded-lg">
-                  <span className="text-xs font-semibold text-slate-300">
+                <div className="px-3 py-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg">
+                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
                     VISA
                   </span>
                 </div>
-                <div className="px-3 py-1.5 bg-slate-800 rounded-lg">
-                  <span className="text-xs font-semibold text-slate-300">
+                <div className="px-3 py-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg">
+                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
                     MC
                   </span>
                 </div>
-                <div className="px-3 py-1.5 bg-slate-800 rounded-lg">
-                  <span className="text-xs font-semibold text-slate-300">
+                <div className="px-3 py-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg">
+                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
                     PayPal
                   </span>
                 </div>
-                <div className="px-3 py-1.5 bg-slate-800 rounded-lg">
-                  <span className="text-xs font-semibold text-slate-300">
+                <div className="px-3 py-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg">
+                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
                     Apple Pay
                   </span>
                 </div>

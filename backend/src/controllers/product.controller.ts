@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import mongoose from "mongoose";
-import { AppError } from "../middleware/errorHandler";
+import { AppError, ErrorCode } from "../middleware/errorHandler";
 import * as ProductService from "../service/product.service";
 import Category from "../models/Category";
 
@@ -36,7 +36,7 @@ export const list = async (req: Request, res: Response, next: NextFunction) => {
           filter.category = cat._id;
         } else {
           // Return empty results if category not found
-          return res.json({ docs: [], total: 0, page: 1, limit: 20 });
+          return res.json({ products: [], total: 0, page: 1, limit: 20 });
         }
       }
     }
@@ -53,7 +53,9 @@ export const list = async (req: Request, res: Response, next: NextFunction) => {
 export const get = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const product = await ProductService.findProductById(req.params.id);
-    if (!product) throw new AppError("Product not found", 404);
+    if (!product) {
+      throw new AppError("Product not found", ErrorCode.PRODUCT_NOT_FOUND);
+    }
     res.json({ data: product });
   } catch (err) {
     next(err);
@@ -67,7 +69,9 @@ export const update = async (
 ) => {
   try {
     const product = await ProductService.updateProduct(req.params.id, req.body);
-    if (!product) throw new AppError("Product not found", 404);
+    if (!product) {
+      throw new AppError("Product not found", ErrorCode.PRODUCT_NOT_FOUND);
+    }
     res.json({ data: product });
   } catch (err) {
     next(err);
@@ -80,8 +84,10 @@ export const remove = async (
   next: NextFunction
 ) => {
   try {
-    const product = await ProductService.deleteProduct(req.params.id);
-    if (!product) throw new AppError("Product not found", 404);
+    const deleted = await ProductService.deleteProduct(req.params.id);
+    if (!deleted) {
+      throw new AppError("Product not found", ErrorCode.PRODUCT_NOT_FOUND);
+    }
     res.status(204).send();
   } catch (err) {
     next(err);
