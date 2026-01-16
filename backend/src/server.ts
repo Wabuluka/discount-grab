@@ -12,6 +12,7 @@ import categoryRouter from "./routes/category.routes";
 import orderRouter from "./routes/order.routes";
 import productRouter from "./routes/product.routes";
 import uploadRouter from "./routes/upload.routes";
+import userRouter from "./routes/user.routes";
 import logger from "./utils/logger";
 
 const app = express();
@@ -34,6 +35,7 @@ app.use("/api/cart", cartRouter);
 app.use("/api/orders", orderRouter);
 app.use("/api/categories", categoryRouter);
 app.use("/api/upload", uploadRouter);
+app.use("/api/users", userRouter);
 
 app.use(notFound);
 app.use(errorHandler);

@@ -99,7 +99,46 @@ export const adminProductApi = {
   },
 };
 
-// Order Management APIs
+// User Types
+export interface User {
+  _id: string;
+  name: string;
+  email: string;
+  role: "user" | "admin";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserStats {
+  total: number;
+  admins: number;
+  customers: number;
+  recentUsers: User[];
+}
+
+// User Management APIs
+export const adminUserApi = {
+  getAll: async (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    role?: "user" | "admin";
+  }): Promise<{ users: User[]; total: number; pages: number; page: number }> => {
+    const response = await api.get("/users", { params });
+    return response.data;
+  },
+
+  getById: async (id: string): Promise<User> => {
+    const response = await api.get(`/users/${id}`);
+    return response.data.user;
+  },
+
+  getStats: async (): Promise<UserStats> => {
+    const response = await api.get("/users/stats");
+    return response.data;
+  },
+};
+
 export const adminOrderApi = {
   getAll: async (params?: {
     page?: number;

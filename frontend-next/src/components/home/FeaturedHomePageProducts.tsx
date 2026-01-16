@@ -1,68 +1,128 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import { useAppSelector } from "@/store/store";
 import { Card } from "@/components/Card";
 import type { Product } from "@/types/product";
 import Link from "next/link";
 
+// Helper to get category name from product
+const getCategoryName = (product: Product): string | null => {
+  if (!product.category) return null;
+  if (typeof product.category === "string") return null;
+  return product.category.name;
+};
+
 export default function FeaturedHomePageProducts() {
   const products = useAppSelector((state) => state.products);
   const data = products.items as Product[];
+  const [activeFilter, setActiveFilter] = useState<string>("all");
+
+  // Get unique categories from products
+  const categories = useMemo(() => {
+    const categorySet = new Set<string>();
+    data.forEach((product) => {
+      const categoryName = getCategoryName(product);
+      if (categoryName) {
+        categorySet.add(categoryName);
+      }
+    });
+    return Array.from(categorySet).slice(0, 4);
+  }, [data]);
+
+  // Filter products based on selected category
+  const filteredProducts = useMemo(() => {
+    if (activeFilter === "all") {
+      return data.slice(0, 8);
+    }
+    return data
+      .filter((product) => getCategoryName(product) === activeFilter)
+      .slice(0, 8);
+  }, [data, activeFilter]);
 
   if (data.length === 0) {
     return null;
   }
 
-  // Limit to 8 featured products for home page
-  const featuredProducts = data.slice(0, 8);
-
   return (
-    <section className="relative py-20 md:py-28 bg-white overflow-hidden">
-      {/* Background decorations */}
-      <div className="absolute top-20 left-0 w-72 h-72 bg-cyan-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 right-0 w-72 h-72 bg-blue-500/5 rounded-full blur-3xl" />
-
-      <div className="relative container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-20 md:py-28 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section header */}
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
-          <div>
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 rounded-full mb-4">
-              <svg
-                className="w-4 h-4 text-cyan-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-                />
-              </svg>
-              <span className="text-cyan-600 text-sm font-medium">
-                Featured Products
-              </span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 mb-4">
-              Trending{" "}
-              <span className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">
-                Electronics
-              </span>
-            </h2>
-            <p className="text-slate-600 text-lg max-w-2xl">
-              Discover our handpicked selection of the latest and most popular
-              electronics. Quality guaranteed.
-            </p>
-          </div>
+        <div className="text-center mb-12">
+          <p className="text-sm text-cyan-600 font-medium uppercase tracking-widest mb-3">
+            Featured Products
+          </p>
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+            Trending This Week
+          </h2>
+          <p className="text-slate-500 max-w-xl mx-auto">
+            Discover our most popular products loved by customers
+          </p>
+        </div>
 
+        {/* Category filters */}
+        {categories.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-2 mb-10">
+            <button
+              onClick={() => setActiveFilter("all")}
+              className={`px-5 py-2 text-sm font-medium rounded-full transition-all duration-200 ${
+                activeFilter === "all"
+                  ? "bg-slate-900 text-white shadow-lg"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              All
+            </button>
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => setActiveFilter(category)}
+                className={`px-5 py-2 text-sm font-medium rounded-full transition-all duration-200 ${
+                  activeFilter === category
+                    ? "bg-slate-900 text-white shadow-lg"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Products grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+          {filteredProducts.map((item) => (
+            <div
+              key={item._id}
+              className="bg-white rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-lg transition-all duration-300 overflow-hidden"
+            >
+              <Card item={item} />
+            </div>
+          ))}
+        </div>
+
+        {/* Empty state */}
+        {filteredProducts.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-slate-500">No products found in this category</p>
+            <button
+              onClick={() => setActiveFilter("all")}
+              className="mt-3 text-cyan-600 font-medium hover:underline"
+            >
+              View all products
+            </button>
+          </div>
+        )}
+
+        {/* View all button */}
+        <div className="text-center mt-12">
           <Link
             href="/shop"
-            className="group inline-flex items-center gap-2 px-6 py-3 bg-slate-900 text-white font-semibold rounded-xl hover:bg-slate-800 transition-all duration-300 shrink-0"
+            className="inline-flex items-center gap-2 px-8 py-3 bg-slate-900 text-white font-medium rounded-xl hover:bg-slate-800 transition-colors"
           >
             View All Products
             <svg
-              className="w-5 h-5 group-hover:translate-x-1 transition-transform"
+              className="w-4 h-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -71,76 +131,10 @@ export default function FeaturedHomePageProducts() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M17 8l4 4m0 0l-4 4m4-4H3"
+                d="M9 5l7 7-7 7"
               />
             </svg>
           </Link>
-        </div>
-
-        {/* Category filters */}
-        <div className="flex flex-wrap gap-3 mb-10">
-          <button className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-sm font-medium rounded-full shadow-lg shadow-cyan-500/25 transition-all duration-300">
-            All Products
-          </button>
-          <button className="px-5 py-2.5 bg-slate-100 text-slate-700 text-sm font-medium rounded-full hover:bg-slate-200 transition-all duration-300">
-            Smartphones
-          </button>
-          <button className="px-5 py-2.5 bg-slate-100 text-slate-700 text-sm font-medium rounded-full hover:bg-slate-200 transition-all duration-300">
-            Laptops
-          </button>
-          <button className="px-5 py-2.5 bg-slate-100 text-slate-700 text-sm font-medium rounded-full hover:bg-slate-200 transition-all duration-300">
-            Audio
-          </button>
-          <button className="px-5 py-2.5 bg-slate-100 text-slate-700 text-sm font-medium rounded-full hover:bg-slate-200 transition-all duration-300">
-            Accessories
-          </button>
-        </div>
-
-        {/* Products grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {featuredProducts.map((item) => (
-            <div
-              key={item._id}
-              className="group bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:border-cyan-100 transition-all duration-300 overflow-hidden"
-            >
-              <Card item={item} />
-            </div>
-          ))}
-        </div>
-
-        {/* Bottom CTA */}
-        <div className="mt-16 text-center">
-          <div className="inline-flex flex-col sm:flex-row items-center gap-4 p-6 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-2xl">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-cyan-500/20 rounded-xl flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-cyan-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div className="text-left">
-                <p className="text-white font-semibold">Limited Time Offer</p>
-                <p className="text-slate-400 text-sm">
-                  Get up to 40% off on selected items
-                </p>
-              </div>
-            </div>
-            <Link
-              href="/shop"
-              className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-cyan-500/25 transition-all duration-300"
-            >
-              Shop Now
-            </Link>
-          </div>
         </div>
       </div>
     </section>

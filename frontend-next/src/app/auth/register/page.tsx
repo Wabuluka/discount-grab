@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as yup from "yup";
@@ -10,15 +10,24 @@ import Input from "@/components/form/Input";
 import { clearError, register } from "@/store/slices/authSlice";
 
 const registerValidationSchema = yup.object({
-  name: yup.string().required("Name is required"),
-  email: yup.string().email("Invalid email").required("Email is required"),
+  name: yup
+    .string()
+    .min(2, "Name must be at least 2 characters")
+    .required("Please enter your name"),
+  email: yup
+    .string()
+    .email("Please enter a valid email address")
+    .required("Email is required"),
   password: yup
     .string()
-    .min(6, "Password must be at least 6 characters")
+    .min(8, "Password must be at least 8 characters")
+    .matches(/[a-z]/, "Include at least one lowercase letter")
+    .matches(/[A-Z]/, "Include at least one uppercase letter")
+    .matches(/[0-9]/, "Include at least one number")
     .required("Password is required"),
   confirmPassword: yup
     .string()
-    .oneOf([yup.ref("password")], "Passwords must match")
+    .oneOf([yup.ref("password")], "Passwords do not match")
     .required("Please confirm your password"),
 });
 
@@ -29,12 +38,60 @@ interface RegisterFormData {
   confirmPassword: string;
 }
 
+// Password strength checker
+function getPasswordStrength(password: string): { score: number; label: string; color: string } {
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (password.length >= 12) score++;
+  if (/[a-z]/.test(password)) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^a-zA-Z0-9]/.test(password)) score++;
+
+  if (score <= 2) return { score, label: "Weak", color: "bg-red-500" };
+  if (score <= 4) return { score, label: "Medium", color: "bg-yellow-500" };
+  return { score, label: "Strong", color: "bg-green-500" };
+}
+
+// Parse validation error from backend
+function parseBackendError(error: string): string {
+  if (error.includes("Validation Error:")) {
+    try {
+      const jsonStr = error.replace("Validation Error: ", "");
+      const parsed = JSON.parse(jsonStr);
+      const errors: string[] = [];
+      for (const [field, value] of Object.entries(parsed)) {
+        if (field !== "_errors" && typeof value === "object" && value !== null) {
+          const fieldErrors = (value as { _errors?: string[] })._errors;
+          if (fieldErrors && fieldErrors.length > 0) {
+            const fieldName = field.charAt(0).toUpperCase() + field.slice(1);
+            errors.push(`${fieldName}: ${fieldErrors[0]}`);
+          }
+        }
+      }
+      if (errors.length > 0) return errors.join(". ");
+    } catch {
+      // Continue to fallback
+    }
+  }
+
+  if (error.toLowerCase().includes("email") && error.toLowerCase().includes("exist")) {
+    return "This email is already registered. Please sign in or use a different email.";
+  }
+  if (error.toLowerCase().includes("too small") || error.toLowerCase().includes("8 characters")) {
+    return "Password must be at least 8 characters long.";
+  }
+  return error;
+}
+
 export default function RegisterPage() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { loading, error, isAuthenticated, initializing } = useAppSelector(
     (state) => state.auth
   );
+  const [password, setPassword] = useState("");
+  const passwordStrength = getPasswordStrength(password);
 
   useEffect(() => {
     if (initializing) return;
@@ -53,6 +110,8 @@ export default function RegisterPage() {
     const { confirmPassword, ...registerData } = data;
     dispatch(register(registerData));
   }
+
+  const displayError = error ? parseBackendError(error) : null;
 
   if (initializing) {
     return (
@@ -79,9 +138,17 @@ export default function RegisterPage() {
           </div>
 
           {/* Error */}
-          {error && (
-            <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-600 text-sm">{error}</p>
+          {displayError && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex gap-3">
+                <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <p className="text-red-700 text-sm font-medium">Registration failed</p>
+                  <p className="text-red-600 text-sm mt-1">{displayError}</p>
+                </div>
+              </div>
             </div>
           )}
 
@@ -118,31 +185,74 @@ export default function RegisterPage() {
                 />
               </div>
 
-              {/* Password fields - side by side on larger screens */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Password
-                  </label>
-                  <Input
-                    name="password"
-                    placeholder="At least 6 characters"
-                    id="password"
-                    type="password"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Password
+                </label>
+                <Input
+                  name="password"
+                  placeholder="Create a strong password"
+                  id="password"
+                  type="password"
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                {/* Password strength indicator */}
+                {password.length > 0 && (
+                  <div className="mt-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${passwordStrength.color} transition-all duration-300`}
+                          style={{ width: `${(passwordStrength.score / 6) * 100}%` }}
+                        />
+                      </div>
+                      <span className={`text-xs font-medium ${
+                        passwordStrength.label === "Weak" ? "text-red-500" :
+                        passwordStrength.label === "Medium" ? "text-yellow-600" : "text-green-600"
+                      }`}>
+                        {passwordStrength.label}
+                      </span>
+                    </div>
+                    <ul className="text-xs space-y-1">
+                      <li className={`flex items-center gap-1.5 ${password.length >= 8 ? "text-green-600" : "text-gray-400"}`}>
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={password.length >= 8 ? "M5 13l4 4L19 7" : "M6 18L18 6M6 6l12 12"} />
+                        </svg>
+                        At least 8 characters
+                      </li>
+                      <li className={`flex items-center gap-1.5 ${/[A-Z]/.test(password) ? "text-green-600" : "text-gray-400"}`}>
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={/[A-Z]/.test(password) ? "M5 13l4 4L19 7" : "M6 18L18 6M6 6l12 12"} />
+                        </svg>
+                        One uppercase letter
+                      </li>
+                      <li className={`flex items-center gap-1.5 ${/[a-z]/.test(password) ? "text-green-600" : "text-gray-400"}`}>
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={/[a-z]/.test(password) ? "M5 13l4 4L19 7" : "M6 18L18 6M6 6l12 12"} />
+                        </svg>
+                        One lowercase letter
+                      </li>
+                      <li className={`flex items-center gap-1.5 ${/[0-9]/.test(password) ? "text-green-600" : "text-gray-400"}`}>
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={/[0-9]/.test(password) ? "M5 13l4 4L19 7" : "M6 18L18 6M6 6l12 12"} />
+                        </svg>
+                        One number
+                      </li>
+                    </ul>
+                  </div>
+                )}
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Confirm password
-                  </label>
-                  <Input
-                    name="confirmPassword"
-                    placeholder="Repeat password"
-                    id="confirmPassword"
-                    type="password"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Confirm password
+                </label>
+                <Input
+                  name="confirmPassword"
+                  placeholder="Repeat your password"
+                  id="confirmPassword"
+                  type="password"
+                />
               </div>
 
               <div className="flex items-start gap-2 pt-1">
