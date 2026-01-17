@@ -2,14 +2,21 @@ import api from "@/services/api";
 
 // Types
 export interface Product {
-  _id: string;
+  _id?: string; // Frontend convention
+  id?: string; // Backend returns 'id'
   title: string;
   description: string;
   price: number;
+  salePrice?: number | null;
+  discountPercent?: number;
+  discountStartDate?: string | null;
+  discountEndDate?: string | null;
+  isOnSale?: boolean;
   images: string[];
   stock: number;
   category?: {
-    _id: string;
+    _id?: string;
+    id?: string;
     name: string;
     slug: string;
   } | string;
@@ -17,6 +24,9 @@ export interface Product {
   createdAt: string;
   updatedAt: string;
 }
+
+// Helper to get product ID (handles both _id and id)
+export const getProductId = (product: Product): string => product.id || product._id || "";
 
 export interface OrderItem {
   product: string;
@@ -35,14 +45,16 @@ export interface ShippingAddress {
 }
 
 export interface Order {
-  _id: string;
+  _id?: string; // Frontend convention
+  id?: string; // Backend returns 'id'
   user: {
-    _id: string;
+    _id?: string;
+    id?: string;
     name: string;
     email: string;
   };
   orderNumber: string;
-  items: OrderItem[];
+  items?: OrderItem[];
   shippingAddress: ShippingAddress;
   paymentMethod: "card" | "cash_on_delivery";
   paymentStatus: "pending" | "paid" | "failed" | "refunded";
@@ -62,6 +74,9 @@ export interface Order {
   updatedAt: string;
 }
 
+// Helper to get order ID (handles both _id and id)
+export const getOrderId = (order: Order): string => order.id || order._id || "";
+
 export interface ProductFormData {
   title: string;
   description: string;
@@ -70,6 +85,9 @@ export interface ProductFormData {
   stock: number;
   category?: string;
   specs?: Record<string, string>;
+  discountPercent?: number;
+  discountStartDate?: string | null;
+  discountEndDate?: string | null;
 }
 
 // Product Management APIs

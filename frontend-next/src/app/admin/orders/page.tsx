@@ -8,6 +8,7 @@ import {
   updatePaymentStatus,
 } from "@/store/slices/adminSlice";
 import type { Order } from "@/lib/adminApi";
+import { getOrderId } from "@/lib/adminApi";
 import { formatAsCurrency } from "@/utils/formatCurrency";
 
 const ORDER_STATUSES = [
@@ -297,7 +298,7 @@ export default function AdminOrdersPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {orderLoading ? (
-                <tr>
+                <tr key="loading">
                   <td colSpan={7} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center justify-center gap-3">
                       <div className="relative w-12 h-12">
@@ -309,7 +310,7 @@ export default function AdminOrdersPage() {
                   </td>
                 </tr>
               ) : filteredOrders.length === 0 ? (
-                <tr>
+                <tr key="empty">
                   <td colSpan={7} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center">
@@ -324,7 +325,7 @@ export default function AdminOrdersPage() {
                 </tr>
               ) : (
                 filteredOrders.map((order, idx) => (
-                  <tr key={order._id} className="hover:bg-gradient-to-r hover:from-slate-50 hover:to-transparent transition-all group">
+                  <tr key={getOrderId(order)} className="hover:bg-gradient-to-r hover:from-slate-50 hover:to-transparent transition-all group">
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-3">
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm ${
@@ -343,7 +344,7 @@ export default function AdminOrdersPage() {
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                             </svg>
-                            {order.items.length} item{order.items.length !== 1 ? "s" : ""}
+                            {order.items?.length || 0} item{(order.items?.length || 0) !== 1 ? "s" : ""}
                           </p>
                         </div>
                       </div>
@@ -369,7 +370,7 @@ export default function AdminOrdersPage() {
                           value={order.orderStatus}
                           onChange={(e) =>
                             handleStatusChange(
-                              order._id,
+                              getOrderId(order),
                               e.target.value as Order["orderStatus"]
                             )
                           }
@@ -397,7 +398,7 @@ export default function AdminOrdersPage() {
                           value={order.paymentStatus}
                           onChange={(e) =>
                             handlePaymentStatusChange(
-                              order._id,
+                              getOrderId(order),
                               e.target.value as Order["paymentStatus"]
                             )
                           }
@@ -597,20 +598,24 @@ export default function AdminOrdersPage() {
                     </div>
                     <h3 className="font-semibold text-gray-900">Shipping Address</h3>
                   </div>
-                  <div className="space-y-1 text-sm">
-                    <p className="font-semibold text-gray-900">{selectedOrder.shippingAddress.fullName}</p>
-                    <p className="text-gray-600">{selectedOrder.shippingAddress.address}</p>
-                    <p className="text-gray-600">{selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.postalCode}</p>
-                    <p className="text-gray-600">{selectedOrder.shippingAddress.country}</p>
-                    {selectedOrder.shippingAddress.phone && (
-                      <p className="text-gray-600 pt-1 flex items-center gap-1">
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                        </svg>
-                        {selectedOrder.shippingAddress.phone}
-                      </p>
-                    )}
-                  </div>
+                  {selectedOrder.shippingAddress ? (
+                    <div className="space-y-1 text-sm">
+                      <p className="font-semibold text-gray-900">{selectedOrder.shippingAddress.fullName}</p>
+                      <p className="text-gray-600">{selectedOrder.shippingAddress.address}</p>
+                      <p className="text-gray-600">{selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.postalCode}</p>
+                      <p className="text-gray-600">{selectedOrder.shippingAddress.country}</p>
+                      {selectedOrder.shippingAddress.phone && (
+                        <p className="text-gray-600 pt-1 flex items-center gap-1">
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                          </svg>
+                          {selectedOrder.shippingAddress.phone}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">Shipping details not available in list view</p>
+                  )}
                 </div>
               </div>
 
@@ -625,7 +630,7 @@ export default function AdminOrdersPage() {
                     </div>
                     <h3 className="font-semibold text-gray-900">Order Items</h3>
                     <span className="ml-auto px-3 py-1 bg-slate-100 text-slate-600 text-sm font-medium rounded-lg">
-                      {selectedOrder.items.length} item{selectedOrder.items.length !== 1 ? "s" : ""}
+                      {selectedOrder.items?.length || 0} item{(selectedOrder.items?.length || 0) !== 1 ? "s" : ""}
                     </span>
                   </div>
                 </div>
@@ -639,7 +644,7 @@ export default function AdminOrdersPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {selectedOrder.items.map((item, index) => (
+                    {selectedOrder.items?.map((item, index) => (
                       <tr key={index} className="hover:bg-slate-50 transition-colors">
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">

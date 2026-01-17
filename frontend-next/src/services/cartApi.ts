@@ -1,12 +1,19 @@
 import api from "./api";
 
+export interface CartItemProduct {
+  _id?: string; // Frontend convention
+  id?: string; // Backend returns 'id'
+  title: string;
+  images: string[];
+  stock: number;
+}
+
+// Helper to get cart item product ID (handles both _id and id)
+export const getCartItemProductId = (product: CartItemProduct): string =>
+  product.id || product._id || "";
+
 export interface CartItem {
-  product: {
-    _id: string;
-    title: string;
-    images: string[];
-    stock: number;
-  };
+  product: CartItemProduct;
   quantity: number;
   price: number;
 }

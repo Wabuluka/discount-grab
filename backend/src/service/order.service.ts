@@ -79,7 +79,7 @@ export const createOrder = async (
 
   for (const item of orderItems) {
     await Product.findByIdAndUpdate(item.product, {
-      $inc: { stock: -item.quantity },
+      $inc: { stock: -item.quantity, salesCount: item.quantity },
     });
   }
 
@@ -158,7 +158,7 @@ export const cancelOrder = async (
 
   for (const item of order.items) {
     await Product.findByIdAndUpdate(item.product, {
-      $inc: { stock: item.quantity },
+      $inc: { stock: item.quantity, salesCount: -item.quantity },
     });
   }
 

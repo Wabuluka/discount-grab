@@ -9,8 +9,9 @@ import { useAppSelector } from "@/store/store";
 import FormWrapper from "@/components/form/FormWrapper";
 import Input from "@/components/form/Input";
 import type { ShippingAddress } from "@/services/orderApi";
-import { orderApi } from "@/services/orderApi";
+import { orderApi, getOrderId } from "@/services/orderApi";
 import { formatAsCurrency } from "@/utils/formatCurrency";
+import { getCartItemProductId } from "@/services/cartApi";
 
 const shippingSchema = yup.object({
   fullName: yup.string().required("Full name is required"),
@@ -70,7 +71,14 @@ export default function CheckoutPage() {
         shippingAddress: data,
         paymentMethod,
       });
-      router.push(`/order-confirmation/${response.data.order._id}`);
+      const order = response.data.order;
+      const orderId = getOrderId(order);
+      if (!orderId) {
+        console.error("Order created but no ID returned:", response.data);
+        setError("Order was created but we couldn't retrieve the order ID. Please check your orders.");
+        return;
+      }
+      router.push(`/order-confirmation/${orderId}`);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       setError(error.response?.data?.message || "Failed to create order");
@@ -322,9 +330,9 @@ export default function CheckoutPage() {
                 {/* Cart Items */}
                 <div className="space-y-4 max-h-64 overflow-y-auto mb-6">
                   {cart?.items.map((item) => (
-                    <div key={item.product._id} className="flex gap-3 p-3 bg-gray-50 rounded-xl">
+                    <div key={getCartItemProductId(item.product)} className="flex gap-3 p-3 bg-gray-50 rounded-xl">
                       <div className="relative w-16 h-16 flex-shrink-0">
-                        {imageErrors[item.product._id] ? (
+                        {imageErrors[getCartItemProductId(item.product)] ? (
                           <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
                             <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -336,7 +344,7 @@ export default function CheckoutPage() {
                             alt={item.product.title}
                             fill
                             className="object-cover rounded-lg"
-                            onError={() => handleImageError(item.product._id)}
+                            onError={() => handleImageError(getCartItemProductId(item.product))}
                           />
                         )}
                       </div>

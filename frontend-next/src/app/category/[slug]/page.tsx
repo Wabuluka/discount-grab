@@ -3,11 +3,12 @@
 import { Card } from "@/components/Card";
 import { useGetProducts } from "@/hooks/useGetProducts";
 import type { Product } from "@/types/product";
+import { getProductId } from "@/types/product";
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { categoryApi, Category } from "@/services/categoryApi";
+import { categoryApi, Category, getCategoryId } from "@/services/categoryApi";
 
 type SortOption = "newest" | "price-low" | "price-high" | "name";
 type ViewMode = "grid" | "list";
@@ -34,7 +35,7 @@ const getProductCategoryName = (product: Product): string | null => {
 
 // Get all category IDs including children (for filtering by parent)
 const getCategoryAndChildrenIds = (category: Category): string[] => {
-  const ids: string[] = [category._id];
+  const ids: string[] = [getCategoryId(category)];
   if (category.subcategories) {
     category.subcategories.forEach((sub) => {
       ids.push(...getCategoryAndChildrenIds(sub));
@@ -458,7 +459,7 @@ export default function CategoryPage() {
           >
             {filteredProducts.map((item: Product) => (
               <div
-                key={item._id}
+                key={getProductId(item)}
                 className={`bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-lg hover:border-slate-200 transition-all duration-300 ${
                   viewMode === "list" ? "flex flex-row" : ""
                 }`}
@@ -520,7 +521,7 @@ function ListCard({ item }: { item: Product }) {
   return (
     <div className="flex flex-col sm:flex-row w-full">
       <div className="relative w-full sm:w-48 h-48 sm:h-auto shrink-0 bg-slate-100">
-        <Link href={`/product/${item._id}`}>
+        <Link href={`/product/${getProductId(item)}`}>
           <Image
             src={
               imageError || !item.images?.[0]
@@ -541,7 +542,7 @@ function ListCard({ item }: { item: Product }) {
       </div>
       <div className="flex-1 p-4 sm:p-6 flex flex-col justify-between">
         <div>
-          <Link href={`/product/${item._id}`}>
+          <Link href={`/product/${getProductId(item)}`}>
             <h3 className="text-lg font-semibold text-slate-900 hover:text-cyan-600 transition-colors mb-2">
               {item.title}
             </h3>
@@ -566,7 +567,7 @@ function ListCard({ item }: { item: Product }) {
               </span>
             )}
             <Link
-              href={`/product/${item._id}`}
+              href={`/product/${getProductId(item)}`}
               className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors text-sm font-medium"
             >
               View Details

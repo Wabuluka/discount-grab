@@ -1,12 +1,14 @@
 import api from "./api";
 
 export interface Category {
-  _id: string;
+  _id?: string; // Frontend convention
+  id?: string; // Backend returns 'id'
   name: string;
   slug: string;
   description?: string;
   parent?: {
-    _id: string;
+    _id?: string;
+    id?: string;
     name: string;
     slug: string;
   } | null;
@@ -18,6 +20,13 @@ export interface Category {
   createdAt: string;
   updatedAt: string;
 }
+
+// Helper to get category ID (handles both _id and id)
+export const getCategoryId = (cat: Category): string => {
+  // Backend returns 'id', some frontend code expects '_id'
+  const id = cat.id || cat._id || "";
+  return id;
+};
 
 export interface CreateCategoryPayload {
   name: string;

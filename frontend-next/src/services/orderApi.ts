@@ -20,10 +20,10 @@ export interface ShippingAddress {
 }
 
 export interface Order {
-  id: string;
+  id?: string; // Backend returns 'id'
   _id?: string; // Keep for backwards compatibility
   orderNumber: string;
-  items: OrderItem[];
+  items?: OrderItem[]; // Made optional - backend may not always populate
   shippingAddress: ShippingAddress;
   paymentMethod: "card" | "cash_on_delivery";
   paymentStatus: "pending" | "paid" | "failed" | "refunded";
@@ -48,6 +48,9 @@ export interface CreateOrderPayload {
   paymentMethod: "card" | "cash_on_delivery";
   notes?: string;
 }
+
+// Helper to get order ID (handles both _id and id from backend)
+export const getOrderId = (order: Order): string => order.id || order._id || "";
 
 export const orderApi = {
   createOrder: (data: CreateOrderPayload) =>

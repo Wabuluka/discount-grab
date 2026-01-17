@@ -8,6 +8,11 @@ export interface IProduct extends Document {
   stock: number;
   category?: Types.ObjectId;
   specs?: Record<string, string>;
+  salesCount: number;
+  // Discount fields
+  discountPercent?: number;
+  discountStartDate?: Date;
+  discountEndDate?: Date;
 }
 
 const productSchema = new Schema<IProduct>(
@@ -19,6 +24,11 @@ const productSchema = new Schema<IProduct>(
     stock: { type: Number, default: 0 },
     category: { type: Schema.Types.ObjectId, ref: "Category" },
     specs: { type: Schema.Types.Mixed },
+    salesCount: { type: Number, default: 0, index: true },
+    // Discount fields
+    discountPercent: { type: Number, min: 0, max: 100, default: 0 },
+    discountStartDate: { type: Date },
+    discountEndDate: { type: Date },
   },
   { timestamps: true }
 );

@@ -99,3 +99,75 @@ export const deleteProduct = async (id: string): Promise<boolean> => {
   const result = await Product.findByIdAndDelete(id);
   return !!result;
 };
+
+export interface PopularProductsResult {
+  products: ProductListItemDTO[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export const findPopularProducts = async (opts: any = {}): Promise<PopularProductsResult> => {
+  const { page = 1, limit = 4, category } = opts;
+  const skip = (page - 1) * limit;
+
+  const filter: any = {};
+  if (category) {
+    filter.category = category;
+  }
+
+  const docs = await Product.find(filter)
+    .populate("category", "name slug")
+    .sort({ salesCount: -1, createdAt: -1 })
+    .skip(skip)
+    .limit(Number(limit))
+    .lean();
+
+  const total = await Product.countDocuments(filter);
+
+  return {
+    products: toProductListDTO(docs),
+    total,
+    page: Number(page),
+    limit: Number(limit),
+  };
+};
+
+export const incrementSalesCount = async (productId: string, quantity: number): Promise<void> => {
+  await Product.findByIdAndUpdate(productId, {
+    $inc: { salesCount: quantity },
+  });
+};
+
+export interface LatestProductsResult {
+  products: ProductListItemDTO[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export const findLatestProducts = async (opts: any = {}): Promise<LatestProductsResult> => {
+  const { page = 1, limit = 4, category } = opts;
+  const skip = (page - 1) * limit;
+
+  const filter: any = {};
+  if (category) {
+    filter.category = category;
+  }
+
+  const docs = await Product.find(filter)
+    .populate("category", "name slug")
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(Number(limit))
+    .lean();
+
+  const total = await Product.countDocuments(filter);
+
+  return {
+    products: toProductListDTO(docs),
+    total,
+    page: Number(page),
+    limit: Number(limit),
+  };
+};

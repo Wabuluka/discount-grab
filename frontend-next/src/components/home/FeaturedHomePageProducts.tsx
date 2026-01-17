@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { useAppSelector } from "@/store/store";
 import { Card } from "@/components/Card";
 import type { Product } from "@/types/product";
+import { getProductId } from "@/types/product";
 import Link from "next/link";
 
 // Helper to get category name from product
@@ -107,7 +108,7 @@ export default function FeaturedHomePageProducts() {
               ))
             : filteredProducts.map((item) => (
                 <div
-                  key={item._id}
+                  key={getProductId(item)}
                   className="bg-white dark:bg-slate-800 rounded-xl sm:rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-cyan-200 dark:hover:border-cyan-700 hover:shadow-xl hover:shadow-cyan-500/10 dark:hover:shadow-cyan-400/5 transition-all duration-300 overflow-hidden"
                 >
                   <Card item={item} />

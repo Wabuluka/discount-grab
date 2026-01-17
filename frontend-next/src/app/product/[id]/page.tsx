@@ -9,13 +9,56 @@ import { addToCart } from "@/store/slices/cartSlice";
 import { useSingleProduct } from "@/hooks/useSingleProduct";
 import { formatAsCurrency } from "@/utils/formatCurrency";
 import type { ProductCategory } from "@/types/product";
+import { getProductId } from "@/types/product";
 
 // Helper to get category info
 const getCategoryInfo = (category: ProductCategory | string | undefined): { id: string; name: string } | null => {
   if (!category) return null;
   if (typeof category === "string") return { id: category, name: category };
-  return { id: category._id, name: category.name };
+  return { id: category.id || category._id || "", name: category.name };
 };
+
+// Countdown timer hook for sale end date
+function useCountdown(endDate: string | null | undefined) {
+  const [timeLeft, setTimeLeft] = useState<{
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!endDate) {
+      setTimeLeft(null);
+      return;
+    }
+
+    const calculateTimeLeft = () => {
+      const end = new Date(endDate).getTime();
+      const now = new Date().getTime();
+      const difference = end - now;
+
+      if (difference <= 0) {
+        setTimeLeft(null);
+        return;
+      }
+
+      setTimeLeft({
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((difference % (1000 * 60)) / 1000),
+      });
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+
+    return () => clearInterval(timer);
+  }, [endDate]);
+
+  return timeLeft;
+}
 
 export default function SingleProductPage() {
   const params = useParams();
@@ -33,6 +76,9 @@ export default function SingleProductPage() {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
   const [isZooming, setIsZooming] = useState(false);
+
+  // Countdown for sale end date
+  const saleCountdown = useCountdown(data?.discountEndDate);
 
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
@@ -330,7 +376,7 @@ export default function SingleProductPage() {
                     {getCategoryInfo(data.category)?.name}
                   </Link>
                 )}
-                <span className="text-xs text-gray-400 font-mono">SKU: {data._id.slice(-8).toUpperCase()}</span>
+                <span className="text-xs text-gray-400 font-mono">SKU: {getProductId(data).slice(-8).toUpperCase()}</span>
               </div>
 
               {/* Title */}
@@ -358,13 +404,61 @@ export default function SingleProductPage() {
               </div>
 
               {/* Price Section */}
-              <div className="bg-gradient-to-r from-gray-50 to-gray-100/50 rounded-2xl p-6 mb-6">
-                <div className="flex items-end gap-3">
-                  <span className="text-4xl lg:text-5xl font-black text-gray-900">
-                    {formatAsCurrency(data.price)}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-500 mt-2">Tax included. Shipping calculated at checkout.</p>
+              <div className="rounded-2xl p-6 mb-6 bg-gray-50 border border-gray-100">
+                {data.isOnSale && data.salePrice != null ? (
+                  <div className="space-y-4">
+                    {/* Discount Badge */}
+                    <div className="flex items-center gap-3">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white text-sm font-semibold rounded-lg">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                        {data.discountPercent}% OFF
+                      </span>
+                      {saleCountdown && (
+                        <span className="text-sm text-gray-500">
+                          Ends in {saleCountdown.days > 0 ? `${saleCountdown.days}d ` : ""}
+                          {String(saleCountdown.hours).padStart(2, "0")}:
+                          {String(saleCountdown.minutes).padStart(2, "0")}:
+                          {String(saleCountdown.seconds).padStart(2, "0")}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Prices */}
+                    <div className="flex items-baseline gap-4">
+                      <span className="text-4xl lg:text-5xl font-bold text-gray-900">
+                        {formatAsCurrency(data.salePrice)}
+                      </span>
+                      <span className="text-xl text-gray-400 line-through">
+                        {formatAsCurrency(data.price)}
+                      </span>
+                    </div>
+
+                    {/* Savings */}
+                    <div className="flex items-center gap-2 text-green-600">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-sm font-medium">
+                        You save {formatAsCurrency(data.price - data.salePrice)}
+                      </span>
+                    </div>
+
+                    <p className="text-sm text-gray-500 pt-3 border-t border-gray-200">
+                      Tax included. Shipping calculated at checkout.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-end gap-3">
+                      <span className="text-4xl lg:text-5xl font-bold text-gray-900">
+                        {formatAsCurrency(data.price)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-500 mt-2">Tax included. Shipping calculated at checkout.</p>
+                  </>
+                )}
               </div>
 
               {/* Stock Status */}

@@ -5,6 +5,8 @@ import { auth, isAdmin } from "../middleware/auth";
 const productRouter = Router();
 
 productRouter.get("/", ProductController.list);
+productRouter.get("/popular", ProductController.popular);
+productRouter.get("/latest", ProductController.latest);
 productRouter.get("/:id", ProductController.get);
 
 productRouter.post("/", auth, isAdmin, ProductController.create);

@@ -7,6 +7,8 @@ import HeroSection from "@/components/home/HeroSection";
 import Collections from "@/components/home/Collections";
 import About from "@/components/home/About";
 import FeaturedHomePageProducts from "@/components/home/FeaturedHomePageProducts";
+import PopularProducts from "@/components/home/PopularProducts";
+import LatestProducts from "@/components/home/LatestProducts";
 
 export default function HomePage() {
   const dispatch = useAppDispatch();
@@ -19,6 +21,8 @@ export default function HomePage() {
     <div>
       <HeroSection />
       <Collections />
+      <LatestProducts />
+      <PopularProducts />
       <About />
       <FeaturedHomePageProducts />
     </div>

@@ -3,10 +3,11 @@
 import { Card } from "@/components/Card";
 import { useGetProducts } from "@/hooks/useGetProducts";
 import type { Product } from "@/types/product";
+import { getProductId } from "@/types/product";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { categoryApi, Category } from "@/services/categoryApi";
+import { categoryApi, Category, getCategoryId } from "@/services/categoryApi";
 import CategoryTree from "@/components/CategoryTree";
 
 type SortOption = "newest" | "price-low" | "price-high" | "name";
@@ -62,10 +63,10 @@ const getCategoryAndChildrenIds = (
 
   const findAndCollect = (cats: Category[]): boolean => {
     for (const cat of cats) {
-      if (cat._id === targetId) {
+      if (getCategoryId(cat) === targetId) {
         // Found the target, collect it and all children
         const collectIds = (c: Category) => {
-          ids.push(c._id);
+          ids.push(getCategoryId(c));
           if (c.subcategories) {
             c.subcategories.forEach(collectIds);
           }
@@ -84,7 +85,7 @@ const getCategoryAndChildrenIds = (
   return ids;
 };
 
-export default function ShopPage() {
+function ShopPageContent() {
   const { data, isLoading } = useGetProducts();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -427,7 +428,7 @@ export default function ShopPage() {
               >
                 <option value="all">All Categories</option>
                 {flattenCategories(categories).map((cat) => (
-                  <option key={cat._id} value={cat._id}>
+                  <option key={getCategoryId(cat)} value={getCategoryId(cat)}>
                     {cat.parentName && cat.parentName !== "undefined"
                       ? `${cat.parentName} → ${cat.name}`
                       : cat.name || "Unnamed Category"}
@@ -556,7 +557,7 @@ export default function ShopPage() {
               )}
               {selectedCategory !== "all" && (
                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-sm">
-                  {flattenCategories(categories).find((c) => c._id === selectedCategory)?.name || selectedCategory}
+                  {flattenCategories(categories).find((c) => getCategoryId(c) === selectedCategory)?.name || selectedCategory}
                   <button
                     onClick={() => handleCategoryChange("all")}
                     className="ml-1 hover:text-blue-900"
@@ -643,7 +644,7 @@ export default function ShopPage() {
           >
             {filteredProducts.map((item: Product) => (
               <div
-                key={item._id}
+                key={getProductId(item)}
                 className={`bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-lg hover:border-slate-200 dark:hover:border-slate-600 transition-all duration-300 ${
                   viewMode === "list" ? "flex flex-row" : ""
                 }`}
@@ -724,7 +725,7 @@ function ListCard({ item }: { item: Product }) {
   return (
     <div className="flex flex-col sm:flex-row w-full">
       <div className="relative w-full sm:w-48 h-48 sm:h-auto shrink-0 bg-slate-100 dark:bg-slate-700">
-        <Link href={`/product/${item._id}`}>
+        <Link href={`/product/${getProductId(item)}`}>
           <Image
             src={
               imageError || !item.images?.[0]
@@ -745,7 +746,7 @@ function ListCard({ item }: { item: Product }) {
       </div>
       <div className="flex-1 p-4 sm:p-6 flex flex-col justify-between">
         <div>
-          <Link href={`/product/${item._id}`}>
+          <Link href={`/product/${getProductId(item)}`}>
             <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors mb-2">
               {item.title}
             </h3>
@@ -770,7 +771,7 @@ function ListCard({ item }: { item: Product }) {
               </span>
             )}
             <Link
-              href={`/product/${item._id}`}
+              href={`/product/${getProductId(item)}`}
               className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors text-sm font-medium"
             >
               View Details
@@ -779,5 +780,31 @@ function ListCard({ item }: { item: Product }) {
         </div>
       </div>
     </div>
+  );
+}
+
+// Loading fallback for Suspense
+function ShopPageLoading() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <div className="container mx-auto px-4 py-8">
+        <div className="animate-pulse">
+          <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/4 mb-8"></div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-slate-200 dark:bg-slate-700 rounded-xl h-64"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={<ShopPageLoading />}>
+      <ShopPageContent />
+    </Suspense>
   );
 }

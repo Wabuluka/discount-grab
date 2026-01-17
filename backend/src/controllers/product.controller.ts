@@ -93,3 +93,31 @@ export const remove = async (
     next(err);
   }
 };
+
+export const popular = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { page, limit, category } = req.query;
+    const result = await ProductService.findPopularProducts({
+      page: Number(page) || 1,
+      limit: Number(limit) || 4,
+      category: category ? String(category) : undefined,
+    });
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const latest = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { page, limit, category } = req.query;
+    const result = await ProductService.findLatestProducts({
+      page: Number(page) || 1,
+      limit: Number(limit) || 4,
+      category: category ? String(category) : undefined,
+    });
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+};

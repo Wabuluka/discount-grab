@@ -115,8 +115,14 @@ export function toOrderItemDTO(item: IOrderItem | any): OrderItemDTO {
  * Transform an Order document to OrderDTO
  */
 export function toOrderDTO(order: IOrder | any): OrderDTO {
+  // Ensure we have a valid ID - _id from Mongoose or id from plain object
+  const orderId = order._id?.toString?.() || order._id || order.id || "";
+  if (!orderId) {
+    console.error("Order missing ID:", JSON.stringify(order, null, 2));
+  }
+
   const dto: OrderDTO = {
-    id: order._id?.toString() || order.id,
+    id: orderId,
     orderNumber: order.orderNumber,
     items: (order.items || []).map(toOrderItemDTO),
     shippingAddress: toShippingAddressDTO(order.shippingAddress),
@@ -154,8 +160,10 @@ export function toOrderListItemDTO(order: IOrder | any): OrderListItemDTO {
     0
   );
 
+  const orderId = order._id?.toString?.() || order._id || order.id || "";
+
   return {
-    id: order._id?.toString() || order.id,
+    id: orderId,
     orderNumber: order.orderNumber,
     itemCount,
     totalAmount: order.totalAmount,

@@ -10,8 +10,11 @@ import {
   deleteProduct,
 } from "@/store/slices/adminSlice";
 import type { Product, ProductFormData } from "@/lib/adminApi";
-import { categoryApi, Category } from "@/services/categoryApi";
+import { getProductId } from "@/lib/adminApi";
+import { categoryApi, Category, getCategoryId as getCatId } from "@/services/categoryApi";
+import { uploadApi } from "@/services/uploadApi";
 import ImageUpload from "@/components/ImageUpload";
+import CategorySearch from "@/components/CategorySearch";
 import { formatAsCurrency } from "@/utils/formatCurrency";
 
 type ModalMode = "add" | "edit" | null;
@@ -27,7 +30,7 @@ const getCategoryName = (product: Product): string => {
 const getCategoryId = (product: Product): string => {
   if (!product.category) return "";
   if (typeof product.category === "string") return product.category;
-  return product.category._id;
+  return product.category.id || product.category._id || "";
 };
 
 export default function AdminProductsPage() {
@@ -46,7 +49,12 @@ export default function AdminProductsPage() {
     images: [],
     stock: 0,
     category: "",
+    discountPercent: 0,
+    discountStartDate: null,
+    discountEndDate: null,
   });
+  const [formError, setFormError] = useState<string | null>(null);
+  const [initialImages, setInitialImages] = useState<string[]>([]);
 
   useEffect(() => {
     dispatch(fetchAdminProducts());
@@ -79,24 +87,54 @@ export default function AdminProductsPage() {
       images: [],
       stock: 0,
       category: "",
+      discountPercent: 0,
+      discountStartDate: null,
+      discountEndDate: null,
     });
+    setInitialImages([]);
+    setFormError(null);
     setModalMode("add");
   };
 
   const openEditModal = (product: Product) => {
     setSelectedProduct(product);
+    const productImages = product.images || [];
     setFormData({
       title: product.title,
       description: product.description,
       price: product.price,
-      images: product.images || [],
+      images: productImages,
       stock: product.stock,
       category: getCategoryId(product),
+      discountPercent: product.discountPercent || 0,
+      discountStartDate: product.discountStartDate || null,
+      discountEndDate: product.discountEndDate || null,
     });
+    setInitialImages(productImages);
+    setFormError(null);
     setModalMode("edit");
   };
 
-  const closeModal = () => {
+  const closeModal = async () => {
+    // If we're in add mode and there are images that were uploaded, delete them
+    if (modalMode === "add" && formData.images.length > 0) {
+      try {
+        await uploadApi.deleteMultipleFiles(formData.images);
+      } catch (err) {
+        console.error("Failed to cleanup uploaded images:", err);
+      }
+    }
+    // If we're in edit mode, delete any newly added images (not in initialImages)
+    if (modalMode === "edit") {
+      const newImages = formData.images.filter((img) => !initialImages.includes(img));
+      if (newImages.length > 0) {
+        try {
+          await uploadApi.deleteMultipleFiles(newImages);
+        } catch (err) {
+          console.error("Failed to cleanup uploaded images:", err);
+        }
+      }
+    }
     setModalMode(null);
     setSelectedProduct(null);
     setFormData({
@@ -106,17 +144,70 @@ export default function AdminProductsPage() {
       images: [],
       stock: 0,
       category: "",
+      discountPercent: 0,
+      discountStartDate: null,
+      discountEndDate: null,
     });
+    setInitialImages([]);
+    setFormError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (modalMode === "add") {
-      await dispatch(createProduct(formData));
-    } else if (modalMode === "edit" && selectedProduct) {
-      await dispatch(updateProduct({ id: selectedProduct._id, data: formData }));
+    setFormError(null);
+
+    try {
+      if (modalMode === "add") {
+        const result = await dispatch(createProduct(formData));
+        if (createProduct.rejected.match(result)) {
+          // Product creation failed - delete uploaded images
+          if (formData.images.length > 0) {
+            try {
+              await uploadApi.deleteMultipleFiles(formData.images);
+              setFormData((prev) => ({ ...prev, images: [] }));
+            } catch (err) {
+              console.error("Failed to cleanup uploaded images:", err);
+            }
+          }
+          setFormError(result.payload as string);
+          return; // Don't close the modal
+        }
+      } else if (modalMode === "edit" && selectedProduct) {
+        const result = await dispatch(updateProduct({ id: getProductId(selectedProduct), data: formData }));
+        if (updateProduct.rejected.match(result)) {
+          // Product update failed - delete newly uploaded images (not in initialImages)
+          const newImages = formData.images.filter((img) => !initialImages.includes(img));
+          if (newImages.length > 0) {
+            try {
+              await uploadApi.deleteMultipleFiles(newImages);
+              setFormData((prev) => ({ ...prev, images: initialImages }));
+            } catch (err) {
+              console.error("Failed to cleanup uploaded images:", err);
+            }
+          }
+          setFormError(result.payload as string);
+          return; // Don't close the modal
+        }
+      }
+      // Success - close modal without deleting images
+      setModalMode(null);
+      setSelectedProduct(null);
+      setFormData({
+        title: "",
+        description: "",
+        price: 0,
+        images: [],
+        stock: 0,
+        category: "",
+        discountPercent: 0,
+        discountStartDate: null,
+        discountEndDate: null,
+      });
+      setInitialImages([]);
+      setFormError(null);
+    } catch (err) {
+      setFormError("An unexpected error occurred");
     }
-    closeModal();
   };
 
   const handleDelete = async (id: string) => {
@@ -187,6 +278,9 @@ export default function AdminProductsPage() {
                   Price
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Discount
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Stock
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -197,7 +291,7 @@ export default function AdminProductsPage() {
             <tbody className="divide-y divide-gray-200">
               {productLoading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center">
+                  <td colSpan={6} className="px-6 py-12 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <div className="w-5 h-5 border-2 border-cyan-600 border-t-transparent rounded-full animate-spin"></div>
                       <span className="text-gray-500">Loading products...</span>
@@ -206,13 +300,13 @@ export default function AdminProductsPage() {
                 </tr>
               ) : filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
                     No products found
                   </td>
                 </tr>
               ) : (
                 filteredProducts.map((product) => (
-                  <tr key={product._id} className="hover:bg-gray-50">
+                  <tr key={getProductId(product)} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
@@ -242,7 +336,29 @@ export default function AdminProductsPage() {
                       <span className="text-sm text-gray-600">{getCategoryName(product)}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm font-medium text-gray-900">{formatAsCurrency(product.price)}</span>
+                      <div className="flex flex-col">
+                        {product.isOnSale && product.salePrice ? (
+                          <>
+                            <span className="text-sm text-gray-400 line-through">{formatAsCurrency(product.price)}</span>
+                            <span className="text-sm font-medium text-orange-600">{formatAsCurrency(product.salePrice)}</span>
+                          </>
+                        ) : (
+                          <span className="text-sm font-medium text-gray-900">{formatAsCurrency(product.price)}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {product.isOnSale ? (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+                          {product.discountPercent}% OFF
+                        </span>
+                      ) : (product.discountPercent || 0) > 0 ? (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                          {product.discountPercent}% (scheduled)
+                        </span>
+                      ) : (
+                        <span className="text-sm text-gray-400">-</span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
@@ -279,7 +395,7 @@ export default function AdminProductsPage() {
                           </svg>
                         </button>
                         <button
-                          onClick={() => setDeleteConfirm(product._id)}
+                          onClick={() => setDeleteConfirm(getProductId(product))}
                           className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -334,6 +450,28 @@ export default function AdminProductsPage() {
           {/* Panel Body - Scrollable */}
           <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
             <div className="p-6 space-y-5">
+              {/* Form Error Message */}
+              {formError && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                  <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div className="flex-1">
+                    <p className="text-red-600 text-sm font-medium">Failed to {modalMode === "add" ? "create" : "update"} product</p>
+                    <p className="text-red-500 text-sm mt-1">{formError}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormError(null)}
+                    className="text-red-400 hover:text-red-600"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Title</label>
                 <input
@@ -388,24 +526,75 @@ export default function AdminProductsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
-                {categoriesLoading ? (
-                  <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-50 text-gray-400">
-                    Loading categories...
+                <CategorySearch
+                  categories={categories.map((cat) => ({
+                    id: getCatId(cat),
+                    name: cat.name,
+                    parentName: cat.parent?.name,
+                  }))}
+                  value={formData.category || ""}
+                  onChange={(categoryId) => setFormData((prev) => ({ ...prev, category: categoryId }))}
+                  loading={categoriesLoading}
+                  placeholder="Search or select a category..."
+                />
+              </div>
+
+              {/* Discount Section */}
+              <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <div className="flex items-center gap-2 mb-4">
+                  <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                  <h3 className="text-sm font-semibold text-gray-700">Discount Settings</h3>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Discount Percentage</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value={formData.discountPercent || 0}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, discountPercent: Math.min(100, Math.max(0, parseInt(e.target.value) || 0)) }))}
+                        placeholder="0"
+                        className="w-full px-4 py-2.5 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all bg-white"
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">%</span>
+                    </div>
+                    {(formData.discountPercent || 0) > 0 && (
+                      <p className="mt-1.5 text-sm text-orange-600">
+                        Sale price: {formatAsCurrency(formData.price * (1 - (formData.discountPercent || 0) / 100))}
+                      </p>
+                    )}
                   </div>
-                ) : (
-                  <select
-                    value={formData.category || ""}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, category: e.target.value }))}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all"
-                  >
-                    <option value="">Select a category</option>
-                    {categories.map((cat) => (
-                      <option key={cat._id} value={cat._id}>
-                        {cat.parent ? `${cat.parent.name} → ${cat.name}` : cat.name}
-                      </option>
-                    ))}
-                  </select>
-                )}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Start Date (Optional)</label>
+                      <input
+                        type="datetime-local"
+                        value={formData.discountStartDate ? new Date(formData.discountStartDate).toISOString().slice(0, 16) : ""}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, discountStartDate: e.target.value ? new Date(e.target.value).toISOString() : null }))}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all bg-white text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">End Date (Optional)</label>
+                      <input
+                        type="datetime-local"
+                        value={formData.discountEndDate ? new Date(formData.discountEndDate).toISOString().slice(0, 16) : ""}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, discountEndDate: e.target.value ? new Date(e.target.value).toISOString() : null }))}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all bg-white text-sm"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Leave dates empty for an always-active discount. Set both dates to create a limited-time sale.
+                  </p>
+                </div>
               </div>
 
               <div>

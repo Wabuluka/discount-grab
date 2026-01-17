@@ -11,6 +11,7 @@ import {
   updateCartItem,
 } from "@/store/slices/cartSlice";
 import { formatAsCurrency } from "@/utils/formatCurrency";
+import { getCartItemProductId } from "@/services/cartApi";
 
 export default function CartPage() {
   const dispatch = useAppDispatch();
@@ -276,7 +277,7 @@ export default function CartPage() {
                 <div className="divide-y divide-slate-100">
                   {cart?.items.map((item) => (
                     <div
-                      key={item.product._id}
+                      key={getCartItemProductId(item.product)}
                       className="p-6 hover:bg-slate-50 transition-colors"
                     >
                       <div className="flex gap-4">
@@ -284,7 +285,7 @@ export default function CartPage() {
                         <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-slate-100 shrink-0">
                           <Image
                             src={
-                              imageErrors[item.product._id] ||
+                              imageErrors[getCartItemProductId(item.product)] ||
                               !item.product.images?.[0]
                                 ? "/placeholder-product.svg"
                                 : item.product.images[0]
@@ -292,14 +293,14 @@ export default function CartPage() {
                             alt={item.product.title}
                             fill
                             className="object-cover"
-                            onError={() => handleImageError(item.product._id)}
+                            onError={() => handleImageError(getCartItemProductId(item.product))}
                           />
                         </div>
 
                         {/* Product Details */}
                         <div className="flex-1 min-w-0">
                           <Link
-                            href={`/product/${item.product._id}`}
+                            href={`/product/${getCartItemProductId(item.product)}`}
                             className="text-lg font-semibold text-slate-900 hover:text-cyan-600 transition-colors line-clamp-1"
                           >
                             {item.product.title}
@@ -315,7 +316,7 @@ export default function CartPage() {
                                 className="w-9 h-9 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded-l-lg transition-colors disabled:opacity-50"
                                 onClick={() =>
                                   handleQuantityChange(
-                                    item.product._id,
+                                    getCartItemProductId(item.product),
                                     item.quantity - 1
                                   )
                                 }
@@ -342,7 +343,7 @@ export default function CartPage() {
                                 className="w-9 h-9 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded-r-lg transition-colors disabled:opacity-50"
                                 onClick={() =>
                                   handleQuantityChange(
-                                    item.product._id,
+                                    getCartItemProductId(item.product),
                                     item.quantity + 1
                                   )
                                 }
@@ -367,7 +368,7 @@ export default function CartPage() {
                             </div>
                             <button
                               className="flex items-center gap-1 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                              onClick={() => handleRemove(item.product._id)}
+                              onClick={() => handleRemove(getCartItemProductId(item.product))}
                               disabled={loading}
                             >
                               <svg

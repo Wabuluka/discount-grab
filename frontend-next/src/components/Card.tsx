@@ -9,13 +9,20 @@ import { addToCart } from "@/store/slices/cartSlice";
 import { formatAsCurrency } from "@/utils/formatCurrency";
 
 type CardItem = {
-  _id: string;
+  _id?: string;
+  id?: string;
   title: string;
-  category?: { _id: string; name: string; slug: string } | string;
+  category?: { _id?: string; id?: string; name: string; slug: string } | string;
   price: number;
+  salePrice?: number | null;
+  discountPercent?: number;
+  isOnSale?: boolean;
   images?: string[];
   stock: number;
 };
+
+// Helper to get item ID (handles both _id and id from backend)
+const getItemId = (item: CardItem): string => item.id || item._id || "";
 
 // Helper to get category name
 const getCategoryName = (category: CardItem["category"]): string | null => {
@@ -45,7 +52,7 @@ export const Card = ({ item }: { item: CardItem }) => {
 
     setAdding(true);
     try {
-      await dispatch(addToCart({ productId: item._id, quantity: 1 })).unwrap();
+      await dispatch(addToCart({ productId: getItemId(item), quantity: 1 })).unwrap();
     } finally {
       setAdding(false);
     }
@@ -57,7 +64,7 @@ export const Card = ({ item }: { item: CardItem }) => {
     <div className="group flex flex-col h-full">
       {/* Image container */}
       <figure className="relative aspect-[4/5] sm:aspect-square bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 rounded-t-xl sm:rounded-t-2xl overflow-hidden">
-        <Link href={`/product/${item._id}`} className="block w-full h-full">
+        <Link href={`/product/${getItemId(item)}`} className="block w-full h-full">
           <Image
             src={imageUrl}
             alt={item.title}
@@ -70,13 +77,20 @@ export const Card = ({ item }: { item: CardItem }) => {
           <div className={`absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300`} />
         </Link>
 
+        {/* Sale badge */}
+        {item.isOnSale && item.discountPercent && (
+          <div className="absolute top-2 left-2 sm:top-3 sm:left-3 px-2 py-0.5 sm:px-3 sm:py-1 bg-gradient-to-r from-red-500 to-orange-500 text-white text-[10px] sm:text-xs font-bold rounded-full shadow-lg">
+            -{item.discountPercent}%
+          </div>
+        )}
+
         {/* Stock badges */}
         {item.stock === 0 && (
           <div className="absolute top-2 right-2 sm:top-3 sm:right-3 px-2 py-0.5 sm:px-3 sm:py-1 bg-red-500 text-white text-[10px] sm:text-xs font-semibold rounded-full shadow-lg">
             Out of Stock
           </div>
         )}
-        {item.stock > 0 && item.stock <= 5 && (
+        {item.stock > 0 && item.stock <= 5 && !item.isOnSale && (
           <div className="absolute top-2 right-2 sm:top-3 sm:right-3 px-2 py-0.5 sm:px-3 sm:py-1 bg-orange-500 text-white text-[10px] sm:text-xs font-semibold rounded-full shadow-lg">
             Only {item.stock} left
           </div>
@@ -117,7 +131,7 @@ export const Card = ({ item }: { item: CardItem }) => {
         )}
 
         {/* Title */}
-        <Link href={`/product/${item._id}`}>
+        <Link href={`/product/${getItemId(item)}`}>
           <h2 className="text-slate-900 dark:text-slate-100 text-sm sm:text-base font-semibold hover:text-cyan-600 dark:hover:text-cyan-400 line-clamp-2 transition-colors leading-tight sm:leading-normal">
             {item.title}
           </h2>
@@ -126,9 +140,20 @@ export const Card = ({ item }: { item: CardItem }) => {
         {/* Price and action */}
         <div className="flex justify-between items-center mt-auto pt-2 sm:pt-3">
           <div className="flex flex-col">
-            <span className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
-              {formatAsCurrency(item.price)}
-            </span>
+            {item.isOnSale && item.salePrice != null ? (
+              <>
+                <span className="text-xs sm:text-sm text-slate-400 dark:text-slate-500 line-through">
+                  {formatAsCurrency(item.price)}
+                </span>
+                <span className="text-base sm:text-lg font-bold text-red-600 dark:text-red-500">
+                  {formatAsCurrency(item.salePrice)}
+                </span>
+              </>
+            ) : (
+              <span className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
+                {formatAsCurrency(item.price)}
+              </span>
+            )}
           </div>
 
           {/* Small cart button for desktop */}

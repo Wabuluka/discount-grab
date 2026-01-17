@@ -53,7 +53,7 @@ export interface UserStatsDTO {
  */
 export function toUserDTO(user: IUser | any): UserDTO {
   return {
-    id: user._id?.toString() || user.id,
+    id: user._id?.toString?.() || user._id || user.id || "",
     email: user.email,
     name: user.name,
     role: user.role || "user",
@@ -67,7 +67,7 @@ export function toUserDTO(user: IUser | any): UserDTO {
  */
 export function toUserPublicDTO(user: IUser | any): UserPublicDTO {
   return {
-    id: user._id?.toString() || user.id,
+    id: user._id?.toString?.() || user._id || user.id || "",
     name: user.name,
     email: user.email,
   };
@@ -78,7 +78,7 @@ export function toUserPublicDTO(user: IUser | any): UserPublicDTO {
  */
 export function toUserListItemDTO(user: IUser | any): UserListItemDTO {
   return {
-    id: user._id?.toString() || user.id,
+    id: user._id?.toString?.() || user._id || user.id || "",
     email: user.email,
     name: user.name,
     role: user.role || "user",

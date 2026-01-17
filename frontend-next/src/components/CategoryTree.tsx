@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Category } from "@/services/categoryApi";
+import { Category, getCategoryId } from "@/services/categoryApi";
 
 interface CategoryTreeProps {
   categories: Category[];
@@ -40,17 +40,18 @@ function CategoryItem({
   onDelete,
 }: CategoryItemProps) {
   const hasChildren = category.subcategories && category.subcategories.length > 0;
-  const isExpanded = expandedIds.has(category._id);
-  const isSelected = selectedCategory === category._id;
+  const catId = getCategoryId(category);
+  const isExpanded = expandedIds.has(catId);
+  const isSelected = selectedCategory === catId;
 
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    toggleExpand(category._id);
+    toggleExpand(catId);
   };
 
   const handleSelect = () => {
     if (onSelectCategory) {
-      onSelectCategory(category._id);
+      onSelectCategory(catId);
     }
   };
 
@@ -145,7 +146,7 @@ function CategoryItem({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onAddSubcategory(category._id);
+                  onAddSubcategory(catId);
                 }}
                 className="p-1.5 text-gray-400 hover:text-cyan-600 hover:bg-cyan-50 rounded-lg transition-colors"
                 title="Add subcategory"
@@ -193,7 +194,7 @@ function CategoryItem({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDelete(category._id);
+                  onDelete(catId);
                 }}
                 className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                 title="Delete category"
@@ -226,7 +227,7 @@ function CategoryItem({
             <div className="border-l-2 border-gray-100 ml-6">
               {category.subcategories!.map((child) => (
                 <CategoryItem
-                  key={child._id}
+                  key={getCategoryId(child)}
                   category={child}
                   level={level + 1}
                   expandedIds={expandedIds}
@@ -301,7 +302,7 @@ function CategoryItem({
         >
           {category.subcategories!.map((child) => (
             <CategoryItem
-              key={child._id}
+              key={getCategoryId(child)}
               category={child}
               level={level + 1}
               expandedIds={expandedIds}
@@ -345,7 +346,7 @@ export default function CategoryTree({
     const collectIds = (cats: Category[]) => {
       cats.forEach((cat) => {
         if (cat.subcategories && cat.subcategories.length > 0) {
-          allIds.add(cat._id);
+          allIds.add(getCategoryId(cat));
           collectIds(cat.subcategories);
         }
       });
@@ -402,7 +403,7 @@ export default function CategoryTree({
       <div className={variant === "admin" ? "divide-y divide-gray-100" : "py-2"}>
         {categories.map((category) => (
           <CategoryItem
-            key={category._id}
+            key={getCategoryId(category)}
             category={category}
             level={0}
             expandedIds={expandedIds}

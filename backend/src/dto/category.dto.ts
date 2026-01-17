@@ -53,7 +53,7 @@ export interface CategoryListItemDTO {
  */
 export function toCategoryRefDTO(category: ICategory | any): CategoryRefDTO {
   return {
-    id: category._id?.toString() || category.id,
+    id: category._id?.toString?.() || category._id || category.id || "",
     name: category.name,
     slug: category.slug,
   };
@@ -64,7 +64,7 @@ export function toCategoryRefDTO(category: ICategory | any): CategoryRefDTO {
  */
 export function toCategoryDTO(category: ICategory | any): CategoryDTO {
   const dto: CategoryDTO = {
-    id: category._id?.toString() || category.id,
+    id: category._id?.toString?.() || category._id || category.id || "",
     name: category.name,
     slug: category.slug,
     isActive: category.isActive ?? true,
@@ -94,7 +94,7 @@ export function toCategoryDTO(category: ICategory | any): CategoryDTO {
  */
 export function toCategoryListItemDTO(category: ICategory | any): CategoryListItemDTO {
   const dto: CategoryListItemDTO = {
-    id: category._id?.toString() || category.id,
+    id: category._id?.toString?.() || category._id || category.id || "",
     name: category.name,
     slug: category.slug,
     isActive: category.isActive ?? true,
@@ -117,7 +117,7 @@ export function toCategoryListItemDTO(category: ICategory | any): CategoryListIt
  */
 export function toCategoryTreeNodeDTO(category: any): CategoryTreeNodeDTO {
   return {
-    id: category._id?.toString() || category.id,
+    id: category._id?.toString?.() || category._id || category.id || "",
     name: category.name,
     slug: category.slug,
     description: category.description,

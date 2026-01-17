@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { categoryApi, Category } from "@/services/categoryApi";
+import { categoryApi, Category, getCategoryId } from "@/services/categoryApi";
 
 // Default collection images for categories without images
 const defaultCollectionImages: Record<string, string> = {
@@ -187,8 +187,8 @@ export default function Collections() {
 
             return (
               <Link
-                key={category._id}
-                href={`/shop?category=${category._id}`}
+                key={getCategoryId(category)}
+                href={`/shop?category=${getCategoryId(category)}`}
                 className={`group relative rounded-3xl overflow-hidden bg-white dark:bg-slate-700 shadow-lg hover:shadow-2xl ${colorTheme.glow} transition-all duration-500 hover:-translate-y-1`}
               >
                 {/* Image Container */}

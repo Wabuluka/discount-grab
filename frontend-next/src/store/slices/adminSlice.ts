@@ -1,6 +1,8 @@
 import {
   adminOrderApi,
   adminProductApi,
+  getOrderId,
+  getProductId,
   Order,
   Product,
   ProductFormData,
@@ -194,8 +196,9 @@ const adminSlice = createSlice({
       })
       .addCase(updateProduct.fulfilled, (state, action) => {
         state.productLoading = false;
+        const payloadId = getProductId(action.payload);
         const index = state.products.findIndex(
-          (p) => p._id === action.payload._id
+          (p) => getProductId(p) === payloadId
         );
         if (index !== -1) {
           state.products[index] = action.payload;
@@ -214,7 +217,7 @@ const adminSlice = createSlice({
       })
       .addCase(deleteProduct.fulfilled, (state, action) => {
         state.productLoading = false;
-        state.products = state.products.filter((p) => p._id !== action.payload);
+        state.products = state.products.filter((p) => getProductId(p) !== action.payload);
       })
       .addCase(deleteProduct.rejected, (state, action) => {
         state.productLoading = false;
@@ -246,8 +249,9 @@ const adminSlice = createSlice({
       })
       .addCase(updateOrderStatus.fulfilled, (state, action) => {
         state.orderLoading = false;
+        const payloadId = getOrderId(action.payload);
         const index = state.orders.findIndex(
-          (o) => o._id === action.payload._id
+          (o) => getOrderId(o) === payloadId
         );
         if (index !== -1) {
           state.orders[index] = action.payload;
@@ -266,8 +270,9 @@ const adminSlice = createSlice({
       })
       .addCase(updatePaymentStatus.fulfilled, (state, action) => {
         state.orderLoading = false;
+        const payloadId = getOrderId(action.payload);
         const index = state.orders.findIndex(
-          (o) => o._id === action.payload._id
+          (o) => getOrderId(o) === payloadId
         );
         if (index !== -1) {
           state.orders[index] = action.payload;

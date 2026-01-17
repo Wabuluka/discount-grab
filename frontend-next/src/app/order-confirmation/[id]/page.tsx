@@ -433,12 +433,12 @@ export default function OrderConfirmationPage() {
               </div>
               <h3 className="text-xl font-bold text-gray-900">Order Items</h3>
               <span className="ml-auto px-4 py-2 bg-gradient-to-r from-slate-100 to-slate-50 text-gray-700 text-sm font-semibold rounded-xl border border-slate-200">
-                {order.items.length} {order.items.length === 1 ? "item" : "items"}
+                {order.items?.length || 0} {(order.items?.length || 0) === 1 ? "item" : "items"}
               </span>
             </div>
           </div>
           <div className="divide-y divide-slate-100">
-            {order.items.map((item, index) => (
+            {order.items?.map((item, index) => (
               <div key={index} className="p-6 flex justify-between items-center hover:bg-gradient-to-r hover:from-slate-50 hover:to-transparent transition-all group">
                 <div className="flex items-center gap-5">
                   <div className="w-20 h-20 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center group-hover:shadow-lg transition-shadow overflow-hidden">

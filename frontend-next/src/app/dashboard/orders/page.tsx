@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from "@/store/store";
 import { logout } from "@/store/slices/authSlice";
 import { resetCart } from "@/store/slices/cartSlice";
 import type { Order } from "@/services/orderApi";
-import { orderApi } from "@/services/orderApi";
+import { orderApi, getOrderId } from "@/services/orderApi";
 import { formatAsCurrency } from "@/utils/formatCurrency";
 
 export default function OrdersPage() {
@@ -503,7 +503,7 @@ export default function OrdersPage() {
                     const statusConfig = getStatusConfig(order.orderStatus);
                     return (
                       <div
-                        key={(order.id || order._id!)}
+                        key={getOrderId(order)}
                         className="p-6 hover:bg-slate-50 transition-colors"
                       >
                         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -511,7 +511,7 @@ export default function OrdersPage() {
                           <div className="flex-1">
                             <div className="flex flex-wrap items-center gap-3 mb-2">
                               <Link
-                                href={`/order-confirmation/${(order.id || order._id!)}`}
+                                href={`/order-confirmation/${getOrderId(order)}`}
                                 className="text-lg font-semibold text-slate-900 hover:text-cyan-600 transition-colors"
                               >
                                 #{order.orderNumber}
@@ -563,8 +563,8 @@ export default function OrdersPage() {
                                     d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
                                   />
                                 </svg>
-                                {order.items.length} item
-                                {order.items.length !== 1 ? "s" : ""}
+                                {order.items?.length || 0} item
+                                {(order.items?.length || 0) !== 1 ? "s" : ""}
                               </span>
                             </div>
                           </div>
@@ -579,7 +579,7 @@ export default function OrdersPage() {
                             </div>
                             <div className="flex items-center gap-2">
                               <Link
-                                href={`/order-confirmation/${(order.id || order._id!)}`}
+                                href={`/order-confirmation/${getOrderId(order)}`}
                                 className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm font-medium"
                               >
                                 View Details
@@ -588,7 +588,7 @@ export default function OrdersPage() {
                                 order.orderStatus
                               ) && (
                                 <button
-                                  onClick={() => handleCancelOrder((order.id || order._id!))}
+                                  onClick={() => handleCancelOrder(getOrderId(order))}
                                   className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium"
                                 >
                                   Cancel

@@ -47,7 +47,7 @@ export function toCartDTO(cart: ICart | any): CartDTO {
   const itemCount = items.reduce((sum: number, item: CartItemDTO) => sum + item.quantity, 0);
 
   return {
-    id: cart._id?.toString() || cart.id,
+    id: cart._id?.toString?.() || cart._id || cart.id || "",
     items,
     totalAmount: cart.totalAmount || 0,
     itemCount,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { categoryApi, Category, CreateCategoryPayload } from "@/services/categoryApi";
+import { categoryApi, Category, CreateCategoryPayload, getCategoryId } from "@/services/categoryApi";
 import ImageUpload from "@/components/ImageUpload";
 import CategoryTree from "@/components/CategoryTree";
 
@@ -93,7 +93,7 @@ export default function AdminCategoriesPage() {
       name: category.name,
       slug: category.slug,
       description: category.description || "",
-      parent: category.parent?._id || null,
+      parent: category.parent ? (category.parent.id || category.parent._id || null) : null,
       image: category.image || "",
       isActive: category.isActive,
     });
@@ -120,7 +120,7 @@ export default function AdminCategoriesPage() {
       if (modalMode === "add") {
         await categoryApi.createCategory(formData);
       } else if (modalMode === "edit" && selectedCategory) {
-        await categoryApi.updateCategory(selectedCategory._id, formData);
+        await categoryApi.updateCategory(getCategoryId(selectedCategory), formData);
       }
       await fetchCategories();
       closeModal();
@@ -147,7 +147,7 @@ export default function AdminCategoriesPage() {
   // Find category by ID in tree structure
   const findCategoryById = (cats: Category[], id: string): Category | null => {
     for (const cat of cats) {
-      if (cat._id === id) return cat;
+      if (getCategoryId(cat) === id) return cat;
       if (cat.subcategories) {
         const found = findCategoryById(cat.subcategories, id);
         if (found) return found;
@@ -372,9 +372,9 @@ export default function AdminCategoriesPage() {
                 >
                   <option value="">None (Top-level category)</option>
                   {parentCategories
-                    .filter((c) => c._id !== selectedCategory?._id)
+                    .filter((c) => getCategoryId(c) !== (selectedCategory ? getCategoryId(selectedCategory) : null))
                     .map((category) => (
-                      <option key={category._id} value={category._id}>
+                      <option key={getCategoryId(category)} value={getCategoryId(category)}>
                         {category.name}
                       </option>
                     ))}
