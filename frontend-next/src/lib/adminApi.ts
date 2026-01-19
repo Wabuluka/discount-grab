@@ -167,6 +167,11 @@ export const adminOrderApi = {
     return response.data;
   },
 
+  getById: async (id: string): Promise<Order> => {
+    const response = await api.get(`/orders/admin/${id}`);
+    return response.data.order;
+  },
+
   updateOrderStatus: async (
     id: string,
     status: Order["orderStatus"]

@@ -212,7 +212,7 @@ export default function AdminCategoriesPage() {
             placeholder="Search categories..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none text-gray-900 placeholder:text-gray-400"
           />
         </div>
       </div>
@@ -326,7 +326,7 @@ export default function AdminCategoriesPage() {
                   value={formData.name}
                   onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                   placeholder="Enter category name"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all text-gray-900 placeholder:text-gray-400"
                 />
               </div>
 
@@ -344,7 +344,7 @@ export default function AdminCategoriesPage() {
                       }))
                     }
                     placeholder="auto-generated-from-name"
-                    className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all"
+                    className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all text-gray-900 placeholder:text-gray-400"
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-1">Leave empty to auto-generate from name</p>
@@ -357,7 +357,7 @@ export default function AdminCategoriesPage() {
                   value={formData.description}
                   onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                   placeholder="Enter category description (optional)"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none resize-none transition-all"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none resize-none transition-all text-gray-900 placeholder:text-gray-400"
                 />
               </div>
 
@@ -368,7 +368,7 @@ export default function AdminCategoriesPage() {
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, parent: e.target.value || null }))
                   }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all text-gray-900 placeholder:text-gray-400"
                 >
                   <option value="">None (Top-level category)</option>
                   {parentCategories

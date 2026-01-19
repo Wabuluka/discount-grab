@@ -1,14 +1,13 @@
-import type { Metadata } from "next";
 import "./globals.css";
 import StoreProvider from "@/store/StoreProvider";
 import QueryProvider from "@/providers/QueryProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
+import { GeoProvider } from "@/providers/GeoProvider";
 import LayoutWrapper from "@/components/LayoutWrapper";
+import JsonLd from "@/components/JsonLd";
+import { defaultMetadata, generateOrganizationJsonLd, generateWebsiteJsonLd } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "DG - Discount Grab",
-  description: "Your favorite electronics store",
-};
+export const metadata = defaultMetadata;
 
 export default function RootLayout({
   children,
@@ -18,6 +17,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href={process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"} />
+        <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"} />
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -32,14 +33,18 @@ export default function RootLayout({
             `,
           }}
         />
+        <JsonLd data={generateOrganizationJsonLd()} />
+        <JsonLd data={generateWebsiteJsonLd()} />
       </head>
       <body className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors duration-300">
         <ThemeProvider>
-          <StoreProvider>
-            <QueryProvider>
-              <LayoutWrapper>{children}</LayoutWrapper>
-            </QueryProvider>
-          </StoreProvider>
+          <GeoProvider>
+            <StoreProvider>
+              <QueryProvider>
+                <LayoutWrapper>{children}</LayoutWrapper>
+              </QueryProvider>
+            </StoreProvider>
+          </GeoProvider>
         </ThemeProvider>
       </body>
     </html>

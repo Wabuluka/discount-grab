@@ -1,20 +1,20 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
-import { useAppDispatch, useAppSelector } from "@/store/store";
+import { Order, orderApi } from "@/services/orderApi";
 import { logout } from "@/store/slices/authSlice";
 import { resetCart } from "@/store/slices/cartSlice";
-import { orderApi, Order } from "@/services/orderApi";
+import { useAppDispatch, useAppSelector } from "@/store/store";
 import { formatAsCurrency } from "@/utils/formatCurrency";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated, user, loading, initializing } = useAppSelector(
-    (state) => state.auth
+    (state) => state.auth,
   );
   const cartState = useAppSelector((state) => state.cart);
   const cartItems = cartState?.cart?.items || [];
@@ -54,10 +54,17 @@ export default function DashboardPage() {
   const stats = useMemo(() => {
     const totalOrders = orders.length;
     const pendingOrders = orders.filter(
-      (o) => o.orderStatus === "pending" || o.orderStatus === "confirmed" || o.orderStatus === "processing"
+      (o) =>
+        o.orderStatus === "pending" ||
+        o.orderStatus === "confirmed" ||
+        o.orderStatus === "processing",
     ).length;
-    const shippedOrders = orders.filter((o) => o.orderStatus === "shipped").length;
-    const deliveredOrders = orders.filter((o) => o.orderStatus === "delivered").length;
+    const shippedOrders = orders.filter(
+      (o) => o.orderStatus === "shipped",
+    ).length;
+    const deliveredOrders = orders.filter(
+      (o) => o.orderStatus === "delivered",
+    ).length;
     const totalSpent = orders
       .filter((o) => o.orderStatus !== "cancelled")
       .reduce((sum, o) => sum + o.totalAmount, 0);
@@ -151,18 +158,30 @@ export default function DashboardPage() {
   const getStatusConfig = (status: string) => {
     switch (status) {
       case "pending":
-        return { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-500" };
+        return {
+          bg: "bg-amber-50",
+          text: "text-amber-700",
+          dot: "bg-amber-500",
+        };
       case "confirmed":
       case "processing":
         return { bg: "bg-blue-50", text: "text-blue-700", dot: "bg-blue-500" };
       case "shipped":
         return { bg: "bg-cyan-50", text: "text-cyan-700", dot: "bg-cyan-500" };
       case "delivered":
-        return { bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500" };
+        return {
+          bg: "bg-emerald-50",
+          text: "text-emerald-700",
+          dot: "bg-emerald-500",
+        };
       case "cancelled":
         return { bg: "bg-red-50", text: "text-red-700", dot: "bg-red-500" };
       default:
-        return { bg: "bg-slate-50", text: "text-slate-700", dot: "bg-slate-500" };
+        return {
+          bg: "bg-slate-50",
+          text: "text-slate-700",
+          dot: "bg-slate-500",
+        };
     }
   };
 
@@ -435,7 +454,9 @@ export default function DashboardPage() {
                     <div>
                       <p className="text-slate-400 text-sm mb-1">Total Spent</p>
                       <p className="text-2xl font-bold">
-                        {ordersLoading ? "-" : formatAsCurrency(stats.totalSpent)}
+                        {ordersLoading
+                          ? "-"
+                          : formatAsCurrency(stats.totalSpent)}
                       </p>
                     </div>
                     <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center">
@@ -517,8 +538,8 @@ export default function DashboardPage() {
                     const statusConfig = getStatusConfig(order.orderStatus);
                     return (
                       <Link
-                        key={order._id}
-                        href={`/order-confirmation/${order._id}`}
+                        key={order.id}
+                        href={`/order-confirmation/${order.id}`}
                         className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors"
                       >
                         <div className="flex items-center gap-4">
@@ -542,11 +563,14 @@ export default function DashboardPage() {
                               #{order.orderNumber}
                             </p>
                             <p className="text-sm text-slate-500">
-                              {new Date(order.createdAt).toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              })}
+                              {new Date(order.createdAt).toLocaleDateString(
+                                "en-US",
+                                {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                },
+                              )}
                             </p>
                           </div>
                         </div>
@@ -554,8 +578,12 @@ export default function DashboardPage() {
                           <span
                             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig.bg} ${statusConfig.text}`}
                           >
-                            <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot}`}></span>
-                            <span className="capitalize">{order.orderStatus}</span>
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot}`}
+                            ></span>
+                            <span className="capitalize">
+                              {order.orderStatus}
+                            </span>
                           </span>
                           <span className="font-semibold text-slate-900">
                             {formatAsCurrency(order.totalAmount)}

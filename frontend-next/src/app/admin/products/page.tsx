@@ -257,7 +257,7 @@ export default function AdminProductsPage() {
             placeholder="Search products..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none text-gray-900 placeholder:text-gray-400"
           />
         </div>
       </div>
@@ -480,7 +480,7 @@ export default function AdminProductsPage() {
                   value={formData.title}
                   onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
                   placeholder="Enter product title"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all text-gray-900 placeholder:text-gray-400"
                 />
               </div>
 
@@ -492,7 +492,7 @@ export default function AdminProductsPage() {
                   value={formData.description}
                   onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                   placeholder="Enter product description"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none resize-none transition-all"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none resize-none transition-all text-gray-900 placeholder:text-gray-400"
                 />
               </div>
 
@@ -507,7 +507,7 @@ export default function AdminProductsPage() {
                     value={formData.price}
                     onChange={(e) => setFormData((prev) => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
                     placeholder="0.00"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all text-gray-900 placeholder:text-gray-400"
                   />
                 </div>
                 <div>
@@ -519,7 +519,7 @@ export default function AdminProductsPage() {
                     value={formData.stock}
                     onChange={(e) => setFormData((prev) => ({ ...prev, stock: parseInt(e.target.value) || 0 }))}
                     placeholder="0"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all text-gray-900 placeholder:text-gray-400"
                   />
                 </div>
               </div>
@@ -560,7 +560,7 @@ export default function AdminProductsPage() {
                         value={formData.discountPercent || 0}
                         onChange={(e) => setFormData((prev) => ({ ...prev, discountPercent: Math.min(100, Math.max(0, parseInt(e.target.value) || 0)) }))}
                         placeholder="0"
-                        className="w-full px-4 py-2.5 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all bg-white"
+                        className="w-full px-4 py-2.5 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all bg-white text-gray-900 placeholder:text-gray-400"
                       />
                       <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">%</span>
                     </div>
@@ -578,7 +578,7 @@ export default function AdminProductsPage() {
                         type="datetime-local"
                         value={formData.discountStartDate ? new Date(formData.discountStartDate).toISOString().slice(0, 16) : ""}
                         onChange={(e) => setFormData((prev) => ({ ...prev, discountStartDate: e.target.value ? new Date(e.target.value).toISOString() : null }))}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all bg-white text-sm"
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all bg-white text-sm text-gray-900 placeholder:text-gray-400"
                       />
                     </div>
                     <div>
@@ -587,7 +587,7 @@ export default function AdminProductsPage() {
                         type="datetime-local"
                         value={formData.discountEndDate ? new Date(formData.discountEndDate).toISOString().slice(0, 16) : ""}
                         onChange={(e) => setFormData((prev) => ({ ...prev, discountEndDate: e.target.value ? new Date(e.target.value).toISOString() : null }))}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all bg-white text-sm"
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all bg-white text-sm text-gray-900 placeholder:text-gray-400"
                       />
                     </div>
                   </div>
