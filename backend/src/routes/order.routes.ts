@@ -13,6 +13,7 @@ orderRouter.get("/number/:orderNumber", OrderController.getOrderByNumber);
 orderRouter.post("/:id/cancel", OrderController.cancelOrder);
 
 orderRouter.get("/admin/all", isAdmin, OrderController.getAllOrders);
+orderRouter.get("/admin/:id", isAdmin, OrderController.getAdminOrderById);
 orderRouter.put("/admin/:id/status", isAdmin, OrderController.updateOrderStatus);
 orderRouter.put("/admin/:id/payment", isAdmin, OrderController.updatePaymentStatus);
 

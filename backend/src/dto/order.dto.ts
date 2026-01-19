@@ -116,9 +116,19 @@ export function toOrderItemDTO(item: IOrderItem | any): OrderItemDTO {
  */
 export function toOrderDTO(order: IOrder | any): OrderDTO {
   // Ensure we have a valid ID - _id from Mongoose or id from plain object
-  const orderId = order._id?.toString?.() || order._id || order.id || "";
-  if (!orderId) {
-    console.error("Order missing ID:", JSON.stringify(order, null, 2));
+  // Mongoose documents have _id as ObjectId, need to convert to string
+  let orderId = "";
+
+  if (order._id) {
+    // Handle Mongoose ObjectId - just call String() which works for both Documents and lean()
+    orderId = String(order._id);
+  } else if (order.id) {
+    orderId = String(order.id);
+  }
+
+  if (!orderId || orderId === "undefined" || orderId === "null") {
+    console.error("Order missing ID - cannot create DTO. Order object:", order);
+    throw new Error("Order ID is required but was not found");
   }
 
   const dto: OrderDTO = {
@@ -160,7 +170,19 @@ export function toOrderListItemDTO(order: IOrder | any): OrderListItemDTO {
     0
   );
 
-  const orderId = order._id?.toString?.() || order._id || order.id || "";
+  // Ensure we have a valid ID - same logic as toOrderDTO
+  let orderId = "";
+  if (order._id) {
+    // Handle Mongoose ObjectId - just call String() which works for both Documents and lean()
+    orderId = String(order._id);
+  } else if (order.id) {
+    orderId = String(order.id);
+  }
+
+  if (!orderId || orderId === "undefined" || orderId === "null") {
+    console.error("Order list item missing ID - cannot create DTO. Order object:", order);
+    throw new Error("Order ID is required but was not found");
+  }
 
   return {
     id: orderId,

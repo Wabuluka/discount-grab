@@ -17,3 +17,4 @@ export * from "./category.dto";
 export * from "./cart.dto";
 export * from "./order.dto";
 export * from "./common.dto";
+export * from "./heroSlide.dto";

@@ -1,3 +1,4 @@
+import compression from "compression";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
@@ -9,6 +10,8 @@ import { errorHandler, notFound } from "./middleware/errorHandler";
 import authRouter from "./routes/auth.routes";
 import cartRouter from "./routes/cart.routes";
 import categoryRouter from "./routes/category.routes";
+import geoRouter from "./routes/geo.routes";
+import heroSlideRouter from "./routes/heroSlide.routes";
 import orderRouter from "./routes/order.routes";
 import productRouter from "./routes/product.routes";
 import uploadRouter from "./routes/upload.routes";
@@ -56,10 +59,22 @@ process.on("SIGINT", () => {
 });
 
 app.use(helmet());
+app.use(compression());
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Response time tracking - set header before response is sent
+app.use((req, res, next) => {
+  const start = Date.now();
+  const originalSend = res.send;
+  res.send = function (body) {
+    res.setHeader("X-Response-Time", `${Date.now() - start}ms`);
+    return originalSend.call(this, body);
+  };
+  next();
+});
 
 // HTTP request logging with Morgan
 app.use(
@@ -69,14 +84,22 @@ app.use(
 // Health check endpoint
 app.get("/health", (_, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));
 
+// Cache control middleware for public API routes
+const cacheControl = (maxAge: number) => (_req: express.Request, res: express.Response, next: express.NextFunction) => {
+  res.set("Cache-Control", `public, max-age=${maxAge}, stale-while-revalidate=${maxAge * 5}`);
+  next();
+};
+
 // API routes
-app.use("/api/products", productRouter);
+app.use("/api/products", cacheControl(60), productRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/orders", orderRouter);
-app.use("/api/categories", categoryRouter);
+app.use("/api/categories", cacheControl(300), categoryRouter);
 app.use("/api/upload", uploadRouter);
 app.use("/api/users", userRouter);
+app.use("/api/hero-slides", cacheControl(120), heroSlideRouter);
+app.use("/api/geo", geoRouter);
 
 // Error handling
 app.use(notFound);

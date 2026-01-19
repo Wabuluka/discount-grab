@@ -107,6 +107,20 @@ export const updatePaymentStatus = async (
   }
 };
 
+export const getAdminOrderById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const order = await orderService.getAdminOrderById(id);
+    res.json({ order });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const getAllOrders = async (
   req: Request,
   res: Response,

@@ -231,6 +231,16 @@ export interface AdminOrderListResult {
   pages: number;
 }
 
+export const getAdminOrderById = async (
+  orderId: string
+): Promise<AdminOrderDTO> => {
+  const order = await Order.findById(orderId).populate("user", "email name");
+  if (!order) {
+    throw new AppError("Order not found", ErrorCode.ORDER_NOT_FOUND);
+  }
+  return toAdminOrderDTO(order);
+};
+
 export const getAllOrders = async (
   page = 1,
   limit = 20,
